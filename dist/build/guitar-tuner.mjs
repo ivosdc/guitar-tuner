@@ -415,15 +415,23 @@ var GuitarTuner = (function () {
     		c() {
     			canvas_1 = element("canvas");
     			this.c = noop;
-    			attr(canvas_1, "width", "200");
-    			attr(canvas_1, "height", "100");
+    			attr(canvas_1, "width", /*width*/ ctx[0]);
+    			attr(canvas_1, "height", /*height*/ ctx[1]);
     			set_style(canvas_1, "border", "1px solid #000000");
     		},
     		m(target, anchor) {
     			insert(target, canvas_1, anchor);
     			/*canvas_1_binding*/ ctx[4](canvas_1);
     		},
-    		p: noop,
+    		p(ctx, [dirty]) {
+    			if (dirty & /*width*/ 1) {
+    				attr(canvas_1, "width", /*width*/ ctx[0]);
+    			}
+
+    			if (dirty & /*height*/ 2) {
+    				attr(canvas_1, "height", /*height*/ ctx[1]);
+    			}
+    		},
     		i: noop,
     		o: noop,
     		d(detaching) {
@@ -432,6 +440,8 @@ var GuitarTuner = (function () {
     		}
     	};
     }
+
+    const AVERAGE_COUNT = 10;
 
     function showHz(pitch) {
     	return pitch === -1 ? 'no signal' : Math.round(pitch);
@@ -443,12 +453,6 @@ var GuitarTuner = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
-    	let pitch = -1;
-    	let note = '';
-    	let device = '';
-    	let detune = 0;
-    	let canvas;
-    	let ctx;
     	let { width = 200 } = $$props;
     	let { height = 100 } = $$props;
 
@@ -475,6 +479,9 @@ var GuitarTuner = (function () {
     		ctx.closePath();
     	}
 
+    	let canvas;
+    	let ctx;
+
     	onMount(async () => {
     		const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => {
     			console.error(err);
@@ -490,13 +497,29 @@ var GuitarTuner = (function () {
     		microphone.connect(analyser);
     		let fData = new Float32Array(analyser.frequencyBinCount);
     		ctx = canvas.getContext("2d");
+    		let pitch = -1;
+    		let note = '';
+    		let device = '';
+    		let detune = 0;
+    		let counter = 0;
+    		let current_detune = 0;
+    		let detuneAverage = 0;
 
     		(function update() {
     			analyser.getFloatTimeDomainData(fData);
     			pitch = pitchDetection(fData, aCtx.sampleRate);
     			note = pitchToNote(pitch);
     			detune = detuneFromPitch(pitch, note);
-    			updateCanvas(ctx, device, pitch, note, detune);
+    			detuneAverage += detune;
+    			counter++;
+
+    			if (counter % AVERAGE_COUNT === 0) {
+    				current_detune = Math.round(detuneAverage % 10);
+    				detuneAverage = 0;
+    				counter = 0;
+    			}
+
+    			updateCanvas(ctx, device, pitch, note, current_detune);
     			requestAnimationFrame(update);
     		})();
     	});
@@ -524,16 +547,16 @@ var GuitarTuner = (function () {
     	function canvas_1_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			canvas = $$value;
-    			$$invalidate(0, canvas);
+    			$$invalidate(2, canvas);
     		});
     	}
 
     	$$self.$$set = $$props => {
-    		if ('width' in $$props) $$invalidate(1, width = $$props.width);
-    		if ('height' in $$props) $$invalidate(2, height = $$props.height);
+    		if ('width' in $$props) $$invalidate(0, width = $$props.width);
+    		if ('height' in $$props) $$invalidate(1, height = $$props.height);
     	};
 
-    	return [canvas, width, height, updateCanvas, canvas_1_binding];
+    	return [width, height, canvas, updateCanvas, canvas_1_binding];
     }
 
     class GuitarTuner extends SvelteElement {
@@ -550,7 +573,7 @@ var GuitarTuner = (function () {
     			instance,
     			create_fragment,
     			safe_not_equal,
-    			{ width: 1, height: 2, updateCanvas: 3 },
+    			{ width: 0, height: 1, updateCanvas: 3 },
     			null
     		);
 
@@ -571,7 +594,7 @@ var GuitarTuner = (function () {
     	}
 
     	get width() {
-    		return this.$$.ctx[1];
+    		return this.$$.ctx[0];
     	}
 
     	set width(width) {
@@ -580,7 +603,7 @@ var GuitarTuner = (function () {
     	}
 
     	get height() {
-    		return this.$$.ctx[2];
+    		return this.$$.ctx[1];
     	}
 
     	set height(height) {

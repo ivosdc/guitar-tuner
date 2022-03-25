@@ -3,12 +3,6 @@ import {onMount} from 'svelte';
 import {pitchDetection, pitchToNote, detuneFromPitch, getNoteString} from './pitchDetector.js';
 
 
-let pitch = -1;
-let note = '';
-let device = '';
-let detune = 0;
-let canvas;
-let ctx;
 export let width = 200;
 export let height = 100;
 
@@ -35,6 +29,10 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.closePath();
 }
 
+const AVERAGE_COUNT = 10;
+let canvas;
+let ctx;
+
 onMount(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true}).catch(err => {
         console.error(err)
@@ -49,19 +47,30 @@ onMount(async () => {
     microphone.connect(analyser);
     let fData = new Float32Array(analyser.frequencyBinCount);
     ctx = canvas.getContext("2d");
-        
+    let pitch = -1;
+    let note = '';
+    let device = '';
+    let detune = 0;
+    let counter = 0;
+    let current_detune = 0;
+    let detuneAverage = 0;
     (function update() {
         analyser.getFloatTimeDomainData(fData);
         pitch = pitchDetection(fData, aCtx.sampleRate);
         note =  pitchToNote(pitch);
         detune = detuneFromPitch(pitch, note);
-        updateCanvas(ctx, device, pitch, note, detune);
+        detuneAverage += detune;
+        counter++;
+        if (counter % AVERAGE_COUNT === 0) {
+            current_detune = Math.round(detuneAverage % 10);
+            detuneAverage = 0;
+            counter = 0;
+        }
+        updateCanvas(ctx, device, pitch, note, current_detune);
         requestAnimationFrame(update);
     }());
 
 })
-
-
 
 function showNote(note) {
     let notevalue = '#';
@@ -87,8 +96,7 @@ function showDevice(device) {
     let offset = device.lastIndexOf("(");
     return device.substr(0, offset - 1);
 }
-
 </script>
 
-<canvas bind:this={canvas} width="200" height="100" style="border:1px solid #000000;">
+<canvas bind:this={canvas} width={width} height={height} style="border:1px solid #000000;">
 </canvas>
