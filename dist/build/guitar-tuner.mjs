@@ -310,6 +310,10 @@ var GuitarTuner = (function () {
     //MIT License, https://github.com/ivosdc/guitar-tuner/tree/main/src/pitchDetector.js
 
     const Hz = 440;
+    const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const A3 = 69;
+    const MIN_SIGNAL = 0.01;
+    const THRESHOLD = 0.2;
 
     function getMaxPos(c, SIZE) {
         let d = 0;
@@ -346,7 +350,7 @@ var GuitarTuner = (function () {
         }
         signal = Math.sqrt(signal / buf.length);
 
-        return signal < 0.01
+        return signal < MIN_SIGNAL
     }
 
     function getSignalStart(buf, threshold) {
@@ -387,25 +391,25 @@ var GuitarTuner = (function () {
         if (notEnoughSignal(buf)) {
             return -1;
         }
-        const threshold = 0.2;    
-        buf = buf.slice(getSignalStart(buf, threshold), getSignalEnd(buf, threshold));
+        buf = buf.slice(getSignalStart(buf, THRESHOLD), getSignalEnd(buf, THRESHOLD));
     	return sampleRate / getMax(buf);
     }
 
+
+
     function pitchToNote(frequency) {
-    	let noteNum = 12 * (Math.log(frequency / Hz) / Math.log(2));
-    	return Math.round(noteNum) + 69;
+    	let noteNum = NOTES.length * (Math.log(frequency / Hz) / Math.log(2));
+    	return Math.round(noteNum) + A3;
     }
 
     function noteToFrequency(note) {
-    	return Hz * Math.pow(2, (note - 69) / 12);
+    	return Hz * Math.pow(2, (note - A3) / NOTES.length);
     }
 
     function detuneFromPitch(frequency, note) {
     	return Math.abs(Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2)));
     }
 
-    const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     function getNoteString(note) {
         return NOTES[note%12]
