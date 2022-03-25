@@ -1,10 +1,10 @@
 <script>
 import {onMount} from 'svelte';
-import {pitchDetection, noteFromPitch, detuneFromPitch, noteStrings} from './pitchDetector.js';
+import {pitchDetection, pitchToNote, detuneFromPitch, getNoteString} from './pitchDetector.js';
+
 
 let pitch = -1;
 let note = '';
-let detune = 0;
 let device = '';
 
 onMount(async () => {
@@ -25,8 +25,7 @@ onMount(async () => {
     (function updateCanvas() {
         analyser.getFloatTimeDomainData(fData);
         pitch = pitchDetection(fData, aCtx.sampleRate);
-        note =  noteFromPitch(pitch);
-        detune = detuneFromPitch(pitch, note);
+        note =  pitchToNote(pitch);
         requestAnimationFrame(updateCanvas);
     }());
 })
@@ -36,8 +35,8 @@ onMount(async () => {
 <main>
     <p id="device">Using device: {device}</p>
     <p id="pitch">Hz: {Math.round(pitch)}</p>
-    <p id="note">Note: {noteStrings[note%12]}</p>
-    <p id="detune">Detune: {Math.abs(detune)}</p>
+    <p id="note">Note: {getNoteString(note)}</p>
+    <p id="detune">Detune: {detuneFromPitch(pitch, note)}</p>
 </main>
 
 <style>

@@ -1,3 +1,7 @@
+//MIT License, https://github.com/ivosdc/guitar-tuner/tree/main/src/pitchDetector.js
+
+const Hz = 440;
+
 function getMaxPos(c, SIZE) {
     let d = 0;
     while (c[d] > c[d + 1]) {
@@ -16,24 +20,24 @@ function getMaxPos(c, SIZE) {
 }
 
 function calcBufferArray(buf) {
-    let c = new Array(buf.length).fill(0);
+    let correlations = new Array(buf.length).fill(0);
     for (let i = 0; i < buf.length; i++) {
         for (let j = 0; j < buf.length - i; j++) {
-            c[i] = c[i] + buf[j] * buf[j + i];
+            correlations[i] = correlations[i] + buf[j] * buf[j + i];
         }
     }
 
-    return c;
+    return correlations;
 }
 
 function notEnoughSignal(buf) {
-    let rms = 0;
+    let signal = 0;
     for (let i = 0; i < buf.length; i++) {
-        rms += buf[i] * buf[i];
+        signal += buf[i] * buf[i];
     }
-    rms = Math.sqrt(rms / buf.length);
+    signal = Math.sqrt(signal / buf.length);
 
-    return rms < 0.01
+    return signal < 0.01
 }
 
 function getSignalStart(buf, threshold) {
@@ -79,17 +83,21 @@ export function pitchDetection(buf, sampleRate) {
 	return sampleRate / getMax(buf);
 }
 
-export function noteFromPitch(frequency) {
-	let noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+export function pitchToNote(frequency) {
+	let noteNum = 12 * (Math.log(frequency / Hz) / Math.log(2));
 	return Math.round(noteNum) + 69;
 }
 
-function frequencyFromNote(note) {
-	return 440 * Math.pow(2, (note - 69) / 12);
+function noteToFrequency(note) {
+	return Hz * Math.pow(2, (note - 69) / 12);
 }
 
 export function detuneFromPitch(frequency, note) {
-	return Math.floor(1200 * Math.log(frequency / frequencyFromNote(note)) / Math.log(2));
+	return Math.abs(Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2)));
 }
 
-export const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+export function getNoteString(note) {
+    return NOTES[note%12]
+}
