@@ -460,7 +460,6 @@ var GuitarTuner = (function () {
     		let aCtx = new AudioContext();
     		const analyser = aCtx.createAnalyser();
     		analyser.fftSize = 2048;
-    		analyser.connect(aCtx.destination);
     		const microphone = aCtx.createMediaStreamSource(stream);
     		microphone.connect(analyser);
     		let fData = new Float32Array(analyser.frequencyBinCount);
