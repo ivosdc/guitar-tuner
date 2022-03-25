@@ -38,7 +38,7 @@ onMount(async () => {
         console.error(err)
     })
     let audioTracks = stream.getAudioTracks();
-    device = audioTracks[0].label;
+    let device = audioTracks[0].label;;
     let AudioContext = window.AudioContext || window.webkitAudioContext || navigator.mozGetUserMedia;
     let aCtx = new AudioContext();
     const analyser = aCtx.createAnalyser();
@@ -49,7 +49,6 @@ onMount(async () => {
     ctx = canvas.getContext("2d");
     let pitch = -1;
     let note = '';
-    let device = '';
     let detune = 0;
     let counter = 0;
     let current_detune = 0;
