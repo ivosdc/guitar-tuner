@@ -11,7 +11,7 @@ or include into your website.
 </head>
 <body>
 <guitar-tuner></guitar-tuner>
-```html
+```
 
 ## Parameter
 - width; default: 200
@@ -42,6 +42,4 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.stroke();
     ctx.closePath();
 }
-```html
-
-
+```
