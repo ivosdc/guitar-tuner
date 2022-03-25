@@ -315,17 +315,17 @@ var GuitarTuner = (function () {
     const MIN_SIGNAL = 0.01;
     const THRESHOLD = 0.2;
 
-    function getMaxPos(c, SIZE) {
-        let d = 0;
-        while (c[d] > c[d + 1]) {
-            d++;
+    function getMaxPos(correlated, SIZE) {
+        let max = 0;
+        while (correlated[max] > correlated[max + 1]) {
+            max++;
         }
 
         let maxval = -1;
         let maxpos = -1;
-        for (let i = d; i < SIZE; i++) {
-            if (c[i] > maxval) {
-                maxval = c[i];
+        for (let i = max; i < SIZE; i++) {
+            if (correlated[i] > maxval) {
+                maxval = correlated[i];
                 maxpos = i;
             }
         }
@@ -386,6 +386,10 @@ var GuitarTuner = (function () {
         return max;
     }
 
+    function noteToFrequency(note) {
+    	return Hz * Math.pow(2, (note - A3) / NOTES.length);
+    }
+
     // ACF2+ algorithm
     function pitchDetection(buf, sampleRate) {
         if (notEnoughSignal(buf)) {
@@ -395,21 +399,14 @@ var GuitarTuner = (function () {
     	return sampleRate / getMax(buf);
     }
 
-
-
     function pitchToNote(frequency) {
     	let noteNum = NOTES.length * (Math.log(frequency / Hz) / Math.log(2));
     	return Math.round(noteNum) + A3;
     }
 
-    function noteToFrequency(note) {
-    	return Hz * Math.pow(2, (note - A3) / NOTES.length);
-    }
-
     function detuneFromPitch(frequency, note) {
     	return Math.abs(Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2)));
     }
-
 
     function getNoteString(note) {
         return NOTES[note%12]
