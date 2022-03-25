@@ -29,15 +29,42 @@ onMount(async () => {
         requestAnimationFrame(updateCanvas);
     }());
 })
+
+function showNote(note) {
+    let notevalue = '';
+    if (note) {
+        notevalue = getNoteString(note);
+    }
+    return notevalue;
+}
+
+function showDetune(pitch, note) {
+    let detune = '';
+    if (note) {
+        detune = " detune: " + detuneFromPitch(pitch, note);
+    }
+    return detune;
+}
+
+function showHz(pitch) {
+    return pitch === -1 ? 'no signal' : Math.round(pitch);
+}
+
 </script>
 
 
 <main>
     <p id="device">Using device: {device}</p>
-    <p id="pitch">Hz: {Math.round(pitch)}</p>
-    <p id="note">Note: {getNoteString(note)}</p>
-    <p id="detune">Detune: {detuneFromPitch(pitch, note)}</p>
+    <p id="pitch">Hz: {showHz(pitch)}</p>
+    <span id="note">{showNote(note)}</span>
+    <span id="detune">{showDetune(pitch, note)}</span>
 </main>
 
 <style>
+    #note {
+        font-size: 3em;
+    }
+    #detune {
+        font-size: 1.5em;
+    }
 </style>

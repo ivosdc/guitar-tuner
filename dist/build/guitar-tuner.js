@@ -405,7 +405,7 @@ var GuitarTuner = (function () {
     }
 
     function detuneFromPitch(frequency, note) {
-    	return Math.abs(Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2)));
+    	return Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
     }
 
     function getNoteString(note) {
@@ -422,18 +422,16 @@ var GuitarTuner = (function () {
     	let t2;
     	let p1;
     	let t3;
-    	let t4_value = Math.round(/*pitch*/ ctx[0]) + "";
+    	let t4_value = showHz(/*pitch*/ ctx[0]) + "";
     	let t4;
     	let t5;
-    	let p2;
+    	let span0;
+    	let t6_value = /*showNote*/ ctx[3](/*note*/ ctx[1]) + "";
     	let t6;
-    	let t7_value = getNoteString(/*note*/ ctx[1]) + "";
     	let t7;
+    	let span1;
+    	let t8_value = /*showDetune*/ ctx[4](/*pitch*/ ctx[0], /*note*/ ctx[1]) + "";
     	let t8;
-    	let p3;
-    	let t9;
-    	let t10_value = detuneFromPitch(/*pitch*/ ctx[0], /*note*/ ctx[1]) + "";
-    	let t10;
 
     	return {
     		c() {
@@ -446,18 +444,16 @@ var GuitarTuner = (function () {
     			t3 = text("Hz: ");
     			t4 = text(t4_value);
     			t5 = space();
-    			p2 = element("p");
-    			t6 = text("Note: ");
-    			t7 = text(t7_value);
-    			t8 = space();
-    			p3 = element("p");
-    			t9 = text("Detune: ");
-    			t10 = text(t10_value);
+    			span0 = element("span");
+    			t6 = text(t6_value);
+    			t7 = space();
+    			span1 = element("span");
+    			t8 = text(t8_value);
     			this.c = noop;
     			attr(p0, "id", "device");
     			attr(p1, "id", "pitch");
-    			attr(p2, "id", "note");
-    			attr(p3, "id", "detune");
+    			attr(span0, "id", "note");
+    			attr(span1, "id", "detune");
     		},
     		m(target, anchor) {
     			insert(target, main, anchor);
@@ -469,19 +465,17 @@ var GuitarTuner = (function () {
     			append(p1, t3);
     			append(p1, t4);
     			append(main, t5);
-    			append(main, p2);
-    			append(p2, t6);
-    			append(p2, t7);
-    			append(main, t8);
-    			append(main, p3);
-    			append(p3, t9);
-    			append(p3, t10);
+    			append(main, span0);
+    			append(span0, t6);
+    			append(main, t7);
+    			append(main, span1);
+    			append(span1, t8);
     		},
     		p(ctx, [dirty]) {
     			if (dirty & /*device*/ 4) set_data(t1, /*device*/ ctx[2]);
-    			if (dirty & /*pitch*/ 1 && t4_value !== (t4_value = Math.round(/*pitch*/ ctx[0]) + "")) set_data(t4, t4_value);
-    			if (dirty & /*note*/ 2 && t7_value !== (t7_value = getNoteString(/*note*/ ctx[1]) + "")) set_data(t7, t7_value);
-    			if (dirty & /*pitch, note*/ 3 && t10_value !== (t10_value = detuneFromPitch(/*pitch*/ ctx[0], /*note*/ ctx[1]) + "")) set_data(t10, t10_value);
+    			if (dirty & /*pitch*/ 1 && t4_value !== (t4_value = showHz(/*pitch*/ ctx[0]) + "")) set_data(t4, t4_value);
+    			if (dirty & /*note*/ 2 && t6_value !== (t6_value = /*showNote*/ ctx[3](/*note*/ ctx[1]) + "")) set_data(t6, t6_value);
+    			if (dirty & /*pitch, note*/ 3 && t8_value !== (t8_value = /*showDetune*/ ctx[4](/*pitch*/ ctx[0], /*note*/ ctx[1]) + "")) set_data(t8, t8_value);
     		},
     		i: noop,
     		o: noop,
@@ -489,6 +483,10 @@ var GuitarTuner = (function () {
     			if (detaching) detach(main);
     		}
     	};
+    }
+
+    function showHz(pitch) {
+    	return pitch === -1 ? 'no signal' : Math.round(pitch);
     }
 
     function instance($$self, $$props, $$invalidate) {
@@ -520,12 +518,33 @@ var GuitarTuner = (function () {
     		})();
     	});
 
-    	return [pitch, note, device];
+    	function showNote(note) {
+    		let notevalue = '';
+
+    		if (note) {
+    			notevalue = getNoteString(note);
+    		}
+
+    		return notevalue;
+    	}
+
+    	function showDetune(pitch, note) {
+    		let detune = '';
+
+    		if (note) {
+    			detune = " detune: " + detuneFromPitch(pitch, note);
+    		}
+
+    		return detune;
+    	}
+
+    	return [pitch, note, device, showNote, showDetune];
     }
 
     class GuitarTuner extends SvelteElement {
     	constructor(options) {
     		super();
+    		this.shadowRoot.innerHTML = `<style>#note{font-size:3em}#detune{font-size:1.5em}</style>`;
 
     		init(
     			this,

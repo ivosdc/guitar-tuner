@@ -96,7 +96,7 @@ export function pitchToNote(frequency) {
 }
 
 export function detuneFromPitch(frequency, note) {
-	return Math.abs(Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2)));
+	return Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
 }
 
 export function getNoteString(note) {
