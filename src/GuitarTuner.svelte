@@ -11,12 +11,12 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "rgb(0, 0, 0)";
     ctx.font = "9px Arial"
-    ctx.fillText(showDevice(device), 1, height - 1);
+    ctx.fillText(device, 1, height - 1);
     ctx.font = "12px Arial";
-    ctx.fillText("Hz: " + showHz(pitch), 5, 15);
-    ctx.fillText(showDetune(pitch, note), (width / 2) - 10, 15);
+    ctx.fillText(pitch, 5, 15);
+    ctx.fillText(detune, (width / 2) - 10, 15);
     ctx.font = "30px Arial";
-    ctx.fillText(showNote(note), (width / 2) - 10, height - 20);
+    ctx.fillText(note, (width / 2) - 10, height - 20);
     ctx.beginPath();
     ctx.moveTo(width / 2, 0);
     ctx.lineTo((width / 2), 5);
@@ -24,7 +24,7 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.closePath();
     ctx.beginPath();
     ctx.moveTo(width / 2, height);
-    ctx.lineTo((width / 2) + detune, 0);
+    ctx.lineTo((width / 2) + detune, Math.abs(detune));
     ctx.stroke();
     ctx.closePath();
 }
@@ -65,11 +65,15 @@ onMount(async () => {
             detuneAverage = 0;
             counter = 0;
         }
-        updateCanvas(ctx, device, pitch, note, current_detune);
+        updateCanvas(ctx, showDevice(device), showHz(pitch), showNote(note), showDetune(current_detune));
         requestAnimationFrame(update);
     }());
 
 })
+
+function showDetune(detune) {
+    return isNaN(detune) ? '' : detune;
+}
 
 function showNote(note) {
     let notevalue = '#';
@@ -79,16 +83,8 @@ function showNote(note) {
     return notevalue;
 }
 
-function showDetune(pitch, note) {
-    let detune = '';
-    if (note) {
-        detune = detuneFromPitch(pitch, note);
-    }
-    return detune;
-}
-
 function showHz(pitch) {
-    return pitch === -1 ? 'no signal' : Math.round(pitch);
+    return pitch === -1 ? 'no signal' : "Hz: " +  Math.round(pitch);
 }
 
 function showDevice(device) {
