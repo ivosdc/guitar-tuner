@@ -1,6 +1,6 @@
 {
   "name": "guitar-tuner",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "<guitar-tuner> Web-component or svelte component",
   "svelte": "src/index.js",
   "module": "dist/build/guitar-tuner.mjs",
