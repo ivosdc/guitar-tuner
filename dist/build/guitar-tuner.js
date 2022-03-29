@@ -306,8 +306,8 @@ var GuitarTuner = (function () {
     const Hz = 440;
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const A3 = 69;
-    const MIN_SIGNAL = 0.01;
-    const THRESHOLD = 0.2;
+    const MIN_SIGNAL = 0.005;
+    const THRESHOLD = 0.25;
 
     function getMaxPos(correlated, SIZE) {
         let max = 0;
@@ -441,10 +441,10 @@ var GuitarTuner = (function () {
     	};
     }
 
-    const AVERAGE_COUNT = 10;
-
     function showDetune(detune) {
-    	return isNaN(detune) ? 0 : detune;
+    	return isNaN(detune) || (detune > 195 || detune < -195)
+    	? ''
+    	: detune;
     }
 
     function showHz(pitch) {
@@ -468,29 +468,31 @@ var GuitarTuner = (function () {
     		ctx.fillText(device, 1, height - 1);
     		ctx.font = "12px Arial";
     		ctx.fillText(pitch, 3, 14);
-    		ctx.font = "18px Arial";
+    		ctx.font = "12px Arial";
 
     		if (detune < 0) {
-    			ctx.fillText(detune, width / 2 - 10, 28);
+    			ctx.fillText(detune, width / 2 - 8, height - 30);
     		} else {
-    			ctx.fillText(detune, width / 2 - 6, 28);
+    			ctx.fillText(detune, width / 2 - 5, height - 30);
     		}
 
-    		ctx.font = "30px Arial";
-    		ctx.fillText(note, width / 2 - 11, height - 20);
+    		ctx.font = "50px Arial";
+    		ctx.fillText(note, width / 2 - 15, height / 3 * 2);
     		ctx.beginPath();
     		ctx.moveTo(width / 2, 0);
     		ctx.lineTo(width / 2, 5);
     		ctx.stroke();
     		ctx.closePath();
 
-    		if (Math.abs(detune) > 10) {
-    			ctx.fillStyle = "rgb(255, 0, 0)";
-    		}
+    		let color = Math.abs(detune) * 10 > 255
+    		? 255
+    		: Math.abs(detune) * 10;
 
+    		ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
     		ctx.beginPath();
+    		ctx.arc(width / 2, height - 20, 2, 0, 2 * Math.PI);
     		ctx.moveTo(width / 2, height - 20);
-    		ctx.lineTo(width / 2 + detune * 2, Math.abs(detune) - Math.abs(detune / 3));
+    		ctx.lineTo(width / 2 + detune * 2, Math.abs(detune) - Math.abs(Math.round(detune / 3)) + 10);
     		ctx.stroke();
     		ctx.closePath();
     	}
@@ -531,31 +533,32 @@ var GuitarTuner = (function () {
     		let pitch = -1;
     		let note = '';
     		let detune = 0;
-    		let detune_current = 0;
-    		let detune_average = 0;
-    		let counter = 0;
+    		let last_detune = 0;
 
     		(function update() {
     			analyser.getFloatTimeDomainData(fData);
     			pitch = pitchDetection(fData, aCtx.sampleRate);
+    			last_detune = detune;
     			detune = detuneFromPitch(pitch, note);
+
+    			detune = Math.abs(last_detune - detune) > 10
+    			? last_detune
+    			: detune;
+
     			note = pitchToNote(pitch);
-    			detune_average += detune;
-    			counter++;
+    			updateCanvas(ctx, showDevice(device), showHz(pitch), showNote(note), showDetune(detune));
 
-    			if (counter % AVERAGE_COUNT === 0) {
-    				detune_current = Math.round(detune_average % 10);
-    				detune_average = 0;
-    				counter = 0;
-    			}
-
-    			updateCanvas(ctx, showDevice(device), showHz(pitch), showNote(note), showDetune(detune_current));
-    			requestAnimationFrame(update);
+    			setTimeout(
+    				() => {
+    					update();
+    				},
+    				100
+    			);
     		})();
     	});
 
     	function showNote(note) {
-    		let notevalue = '--';
+    		let notevalue = '';
 
     		if (note) {
     			notevalue = getNoteString(note);

@@ -3,8 +3,8 @@
 const Hz = 440;
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const A3 = 69;
-const MIN_SIGNAL = 0.01;
-const THRESHOLD = 0.2;
+const MIN_SIGNAL = 0.005;
+const THRESHOLD = 0.25;
 
 function getMaxPos(correlated, SIZE) {
     let max = 0;
