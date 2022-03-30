@@ -14,11 +14,11 @@ or include into your website.
 ```
 
 ## Parameter
-- width; default: 200
-- height; default: 200
+- width; default: 300
+- height; default: 150
 - updateCanvas(ctx, device, pitch, note, detune)
 
-default / example:
+example:
 ```html
 export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.fillStyle = "rgb(245,245,245)";

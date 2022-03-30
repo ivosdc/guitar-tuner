@@ -306,8 +306,8 @@ var GuitarTuner = (function () {
     const Hz = 440;
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const A3 = 69;
-    const MIN_SIGNAL = 0.005;
-    const THRESHOLD = 0.25;
+    const MIN_SIGNAL = 0.002;
+    const THRESHOLD = 0.002;
 
     function getMaxPos(correlated, SIZE) {
         let max = 0;
@@ -350,6 +350,7 @@ var GuitarTuner = (function () {
     function getSignalStart(buf, threshold) {
         let start = 0;
         for (let i = 0; i < buf.length / 2; i++) {
+            console.log(Math.abs(buf[i]));
             if (Math.abs(buf[i]) < threshold) {
                 start = i;
                 break;
@@ -468,7 +469,6 @@ var GuitarTuner = (function () {
     		ctx.fillText(device, 1, height - 1);
     		ctx.font = "12px Arial";
     		ctx.fillText(pitch, 3, 14);
-    		ctx.font = "12px Arial";
 
     		if (detune < 0) {
     			ctx.fillText(detune, width / 2 - 8, height - 30);
@@ -492,7 +492,7 @@ var GuitarTuner = (function () {
     		ctx.beginPath();
     		ctx.arc(width / 2, height - 20, 2, 0, 2 * Math.PI);
     		ctx.moveTo(width / 2, height - 20);
-    		ctx.lineTo(width / 2 + detune * 2, Math.abs(detune) - Math.abs(Math.round(detune / 3)) + 10);
+    		ctx.lineTo(width / 2 + detune, Math.abs(detune) - Math.abs(Math.round(detune / 3)) + 10);
     		ctx.stroke();
     		ctx.closePath();
     	}
@@ -533,18 +533,11 @@ var GuitarTuner = (function () {
     		let pitch = -1;
     		let note = '';
     		let detune = 0;
-    		let last_detune = 0;
 
     		(function update() {
     			analyser.getFloatTimeDomainData(fData);
     			pitch = pitchDetection(fData, aCtx.sampleRate);
-    			last_detune = detune;
     			detune = detuneFromPitch(pitch, note);
-
-    			detune = Math.abs(last_detune - detune) > 10
-    			? last_detune
-    			: detune;
-
     			note = pitchToNote(pitch);
     			updateCanvas(ctx, showDevice(device), showHz(pitch), showNote(note), showDetune(detune));
 
@@ -552,7 +545,7 @@ var GuitarTuner = (function () {
     				() => {
     					update();
     				},
-    				100
+    				75
     			);
     		})();
     	});

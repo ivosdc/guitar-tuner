@@ -14,7 +14,6 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.fillText(device, 1, height - 1);
     ctx.font = "12px Arial";
     ctx.fillText(pitch, 3, 14);
-    ctx.font = "12px Arial";
     if (detune < 0) {
         ctx.fillText(detune, (width / 2) - 8, height - 30);
     } else {
@@ -32,7 +31,7 @@ export function updateCanvas(ctx, device, pitch, note, detune) {
     ctx.beginPath();
     ctx.arc((width / 2), height - 20, 2, 0, 2 * Math.PI);
     ctx.moveTo((width / 2), height - 20);
-    ctx.lineTo((width / 2) + (detune * 2), (Math.abs(detune) - (Math.abs(Math.round(detune / 3)))) + 10);
+    ctx.lineTo((width / 2) + detune, (Math.abs(detune) - (Math.abs(Math.round(detune / 3)))) + 10);
     ctx.stroke();
     ctx.closePath();
 }
@@ -71,16 +70,13 @@ onMount(async () => {
     let pitch = -1;
     let note = '';
     let detune = 0;
-    let last_detune = 0;
     (function update() {
         analyser.getFloatTimeDomainData(fData);
         pitch = pitchDetection(fData, aCtx.sampleRate);
-        last_detune = detune;
         detune = detuneFromPitch(pitch, note);
-        detune = Math.abs(last_detune - detune) > 10 ? last_detune : detune;
         note =  pitchToNote(pitch);
         updateCanvas(ctx, showDevice(device), showHz(pitch), showNote(note), showDetune(detune));
-        setTimeout(() => {  update(); }, 100);
+        setTimeout(() => {  update(); }, 75);
     }());
 })
 
@@ -102,7 +98,7 @@ function showHz(pitch) {
 
 function showDevice(device) {
     let offset = device.lastIndexOf("(");
-    return device.substr(0, offset - 1);
+    return device.substring(0, offset - 1);
 }
 </script>
 
