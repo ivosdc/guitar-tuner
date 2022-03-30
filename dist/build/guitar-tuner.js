@@ -350,7 +350,6 @@ var GuitarTuner = (function () {
     function getSignalStart(buf, threshold) {
         let start = 0;
         for (let i = 0; i < buf.length / 2; i++) {
-            console.log(Math.abs(buf[i]));
             if (Math.abs(buf[i]) < threshold) {
                 start = i;
                 break;
@@ -454,7 +453,7 @@ var GuitarTuner = (function () {
 
     function showDevice(device) {
     	let offset = device.lastIndexOf("(");
-    	return device.substr(0, offset - 1);
+    	return device.substring(0, offset - 1);
     }
 
     function instance($$self, $$props, $$invalidate) {
