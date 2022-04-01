@@ -55,7 +55,7 @@ let ctx;
 onMount(async () => {
     ctx = canvas.getContext("2d");
     startScreenCanvas(ctx);
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true}).catch(err => {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: false}).catch(err => {
         console.error(err)
     })
     let audioTracks = stream.getAudioTracks();
@@ -68,7 +68,7 @@ onMount(async () => {
     microphone.connect(analyser);
     let fData = new Float32Array(analyser.frequencyBinCount);
     let pitch = -1;
-    let note = '';
+    let note = -1;
     let detune = 0;
     (function update() {
         analyser.getFloatTimeDomainData(fData);
