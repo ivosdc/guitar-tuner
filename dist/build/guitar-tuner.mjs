@@ -545,6 +545,7 @@ var GuitarTuner = (function () {
     		let pitch = -1;
     		let note = -1;
     		let detune = 0;
+    		const UPDATE_MS = 60;
 
     		(function update() {
     			analyser.getFloatTimeDomainData(fData);
@@ -552,13 +553,7 @@ var GuitarTuner = (function () {
     			detune = detuneFromPitch(pitch, note);
     			note = pitchToNote(pitch);
     			updateCanvas(ctx, showDevice(device), showPitch(pitch), showNote(note), showDetune(detune));
-
-    			setTimeout(
-    				() => {
-    					update();
-    				},
-    				75
-    			);
+    			setTimeout(update, UPDATE_MS);
     		})();
     	});
 
@@ -574,7 +569,7 @@ var GuitarTuner = (function () {
 
     	function showPitch(pitch) {
     		let current_pitch = pitch === -1 ? 'no signal' : Math.round(pitch);
-    		return 'Chamber pitch: ' + chamber_pitch + ' Hz ' + current_pitch;
+    		return 'pitch: ' + chamber_pitch + ' Hz ' + current_pitch;
     	}
 
     	function canvas_1_binding($$value) {
