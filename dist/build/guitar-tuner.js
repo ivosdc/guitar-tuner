@@ -401,7 +401,8 @@ var GuitarTuner = (function () {
     }
 
     function detuneFromPitch(frequency, note) {
-    	return Math.round(240 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
+        const factor = 10;
+    	return Math.round(factor * 100 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
     }
 
     function getNoteString(note) {
