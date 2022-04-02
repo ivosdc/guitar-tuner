@@ -422,7 +422,7 @@ var GuitarTuner = (function () {
     		},
     		m(target, anchor) {
     			insert(target, canvas_1, anchor);
-    			/*canvas_1_binding*/ ctx[6](canvas_1);
+    			/*canvas_1_binding*/ ctx[7](canvas_1);
     		},
     		p(ctx, [dirty]) {
     			if (dirty & /*width*/ 1) {
@@ -437,7 +437,7 @@ var GuitarTuner = (function () {
     		o: noop,
     		d(detaching) {
     			if (detaching) detach(canvas_1);
-    			/*canvas_1_binding*/ ctx[6](null);
+    			/*canvas_1_binding*/ ctx[7](null);
     		}
     	};
     }
@@ -455,7 +455,19 @@ var GuitarTuner = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let { width = 180 } = $$props;
     	let { height = 80 } = $$props;
+    	let { mute } = $$props;
     	let { chamber_pitch = getChamberPitch() } = $$props;
+
+    	function setMicrophone(mute) {
+    		mute = typeof mute === 'string' ? JSON.parse(mute) : mute;
+
+    		if (mute !== undefined) {
+    			console.log(mute);
+    			mute ? stopMicrophone() : startMicrophone();
+    		}
+
+    		return mute;
+    	}
 
     	function setPitch(pitch) {
     		return setChamberPitch(pitch);
@@ -464,9 +476,8 @@ var GuitarTuner = (function () {
     	let canvas;
 
     	function updateCanvas(pitch, note, detune) {
+    		clearCanvas();
     		let ctx = canvas.getContext("2d");
-    		ctx.fillStyle = "rgb(245,245,235)";
-    		ctx.fillRect(0, 0, width, height);
     		ctx.fillStyle = "rgb(166, 166, 166)";
     		ctx.font = "12px Arial";
     		ctx.fillText(chamber_pitch + ' Hz', 3, 14);
@@ -494,13 +505,18 @@ var GuitarTuner = (function () {
     		ctx.closePath();
     	}
 
-    	function initCanvas() {
+    	function clearCanvas() {
     		let ctx = canvas.getContext("2d");
-    		ctx.fillStyle = "rgb(245,245,245)";
+    		ctx.fillStyle = "rgb(245,245,235)";
     		ctx.fillRect(0, 0, width, height);
+    	}
+
+    	function maintainCanvas(text, shift_left_px) {
+    		clearCanvas();
+    		let ctx = canvas.getContext("2d");
     		ctx.fillStyle = "rgb(6, 6, 6)";
     		ctx.font = "12px Arial";
-    		ctx.fillText("Initializing...", width / 2 - 30, height / 2);
+    		ctx.fillText(text, width / 2 - shift_left_px, height / 2);
     		ctx.beginPath();
     		ctx.moveTo(width / 2, 0);
     		ctx.lineTo(width / 2, 5);
@@ -508,10 +524,26 @@ var GuitarTuner = (function () {
     		ctx.closePath();
     	}
 
-    	onMount(async () => {
-    		initCanvas();
+    	let stream;
 
-    		const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(err => {
+    	onMount(async () => {
+    		await startMicrophone();
+    	});
+
+    	function stopMicrophone() {
+    		maintainCanvas("Microphone off", 40);
+
+    		stream.getTracks().forEach(function (track) {
+    			if (track.readyState === 'live' && track.kind === 'audio') {
+    				track.stop();
+    			}
+    		});
+    	}
+
+    	async function startMicrophone() {
+    		maintainCanvas("Initializing...", 30);
+
+    		stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(err => {
     			console.error(err);
     		});
 
@@ -523,7 +555,7 @@ var GuitarTuner = (function () {
     		microphone.connect(analyser);
     		let fData = new Float32Array(analyser.frequencyBinCount);
     		update(analyser, aCtx.sampleRate, fData);
-    	});
+    	}
 
     	function update(analyser, sampleRate, fData) {
     		const UPDATE_MS = 60;
@@ -531,14 +563,17 @@ var GuitarTuner = (function () {
     		let note = pitchToNote(pitch);
     		let detune = detuneFromPitch(pitch, note);
     		analyser.getFloatTimeDomainData(fData);
-    		updateCanvas(showPitch(pitch), showNote(note), showDetune(detune));
 
-    		setTimeout(
-    			() => {
-    				update(analyser, sampleRate, fData);
-    			},
-    			UPDATE_MS
-    		);
+    		if (!mute) {
+    			updateCanvas(showPitch(pitch), showNote(note), showDetune(detune));
+
+    			setTimeout(
+    				() => {
+    					update(analyser, sampleRate, fData);
+    				},
+    				UPDATE_MS
+    			);
+    		}
     	}
 
     	function showNote(note) {
@@ -561,12 +596,17 @@ var GuitarTuner = (function () {
     	$$self.$$set = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('chamber_pitch' in $$props) $$invalidate(3, chamber_pitch = $$props.chamber_pitch);
+    		if ('mute' in $$props) $$invalidate(3, mute = $$props.mute);
+    		if ('chamber_pitch' in $$props) $$invalidate(4, chamber_pitch = $$props.chamber_pitch);
     	};
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*chamber_pitch*/ 8) {
-    			 $$invalidate(3, chamber_pitch = setPitch(chamber_pitch));
+    		if ($$self.$$.dirty & /*mute*/ 8) {
+    			 $$invalidate(3, mute = setMicrophone(mute));
+    		}
+
+    		if ($$self.$$.dirty & /*chamber_pitch*/ 16) {
+    			 $$invalidate(4, chamber_pitch = setPitch(chamber_pitch));
     		}
     	};
 
@@ -574,9 +614,10 @@ var GuitarTuner = (function () {
     		width,
     		height,
     		canvas,
+    		mute,
     		chamber_pitch,
     		updateCanvas,
-    		initCanvas,
+    		maintainCanvas,
     		canvas_1_binding
     	];
     }
@@ -598,9 +639,10 @@ var GuitarTuner = (function () {
     			{
     				width: 0,
     				height: 1,
-    				chamber_pitch: 3,
-    				updateCanvas: 4,
-    				initCanvas: 5
+    				mute: 3,
+    				chamber_pitch: 4,
+    				updateCanvas: 5,
+    				maintainCanvas: 6
     			},
     			null
     		);
@@ -618,7 +660,7 @@ var GuitarTuner = (function () {
     	}
 
     	static get observedAttributes() {
-    		return ["width", "height", "chamber_pitch", "updateCanvas", "initCanvas"];
+    		return ["width", "height", "mute", "chamber_pitch", "updateCanvas", "maintainCanvas"];
     	}
 
     	get width() {
@@ -639,8 +681,17 @@ var GuitarTuner = (function () {
     		flush();
     	}
 
-    	get chamber_pitch() {
+    	get mute() {
     		return this.$$.ctx[3];
+    	}
+
+    	set mute(mute) {
+    		this.$$set({ mute });
+    		flush();
+    	}
+
+    	get chamber_pitch() {
+    		return this.$$.ctx[4];
     	}
 
     	set chamber_pitch(chamber_pitch) {
@@ -649,11 +700,11 @@ var GuitarTuner = (function () {
     	}
 
     	get updateCanvas() {
-    		return this.$$.ctx[4];
+    		return this.$$.ctx[5];
     	}
 
-    	get initCanvas() {
-    		return this.$$.ctx[5];
+    	get maintainCanvas() {
+    		return this.$$.ctx[6];
     	}
     }
 
