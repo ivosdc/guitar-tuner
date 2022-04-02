@@ -8,12 +8,41 @@
 </head>
 
 <body>
-    <div class="my-tuner">
-        <a href="https://gitarrenakkorde.org" target="_blank"><img src="https://ivosdc.github.io/guitar-tuner/static/gitarrenakkorde.png" alt="gitarrenakkorde.org"></a>
-        <guitar-tuner></guitar-tuner>
-        <a class="linkme" href="https://github.com/ivosdc/guitar-tuner" target="_blank">&lt;guitar-tuner/&gt;</a>
+<div class="my-tuner">
+    <a href="https://gitarrenakkorde.org" target="_blank"><img
+            src="https://ivosdc.github.io/guitar-tuner/static/gitarrenakkorde.png" alt="gitarrenakkorde.org"></a>
+    <a class="linkme" href="https://github.com/ivosdc/guitar-tuner" target="_blank">&lt;guitar-tuner/&gt;</a>
+    <guitar-tuner id="guitar-tuner"></guitar-tuner>
+    <div id="pitch-tuner">
+        pitch:
+        <span id="pitch-down" class="pitch-tune"> down </span>/
+        <span id="pitch-up" class="pitch-tune"> up </span>
     </div>
+</div>
 </body>
+<script>
+    let pitch = 440;
+    let guitarTuner = document.getElementById('guitar-tuner');
+    guitarTuner.setAttribute('shadowed', 'true');
+
+    let pitchUp = document.getElementById('pitch-up');
+    pitchUp.onclick = setPitchUp;
+    let pitchDown = document.getElementById('pitch-down');
+    pitchDown.onclick = setPitchDown;
+
+    function setPitchUp() {
+        pitch++;
+        console.log(pitch)
+        guitarTuner.setAttribute('chamber_pitch', pitch.toString());
+    }
+
+    function setPitchDown() {
+        pitch--;
+        console.log(pitch)
+        guitarTuner.setAttribute('chamber_pitch', pitch.toString());
+    }
+
+</script>
 </html>
 
 <style>
@@ -26,9 +55,10 @@
         color: #6e6e6e;
     }
 
-    .linkme {
+    .pitch-tune {
         color: #6e6e6e;
-        font-size: x-small;
+        cursor: pointer;
+        font-weight: bold;
     }
 
     .my-tuner {
