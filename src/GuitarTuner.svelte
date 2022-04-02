@@ -10,31 +10,29 @@
     } from './pitchDetector.js';
 
 
-    export let width = 300;
-    export let height = 150;
+    export let width = 180;
+    export let height = 80;
     export let chamber_pitch = getChamberPitch();
     $: chamber_pitch = setPitch(chamber_pitch);
 
     function setPitch(pitch) {
         return setChamberPitch(pitch);
-        updateCanvas()
     }
 
-    export function updateCanvas(ctx, device, pitch, note, detune) {
-        ctx.fillStyle = "rgb(245,245,245)";
+    let canvas;
+
+    export function updateCanvas(pitch, note, detune) {
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgb(245,245,235)";
         ctx.fillRect(0, 0, width, height);
-        ctx.fillStyle = "rgb(0, 0, 0)";
-        ctx.font = "9px Arial"
-        ctx.fillText(device, 1, height - 1);
+        ctx.fillStyle = "rgb(166, 166, 166)";
         ctx.font = "12px Arial";
-        ctx.fillText(pitch, 3, 14);
-        if (detune < 0) {
-            ctx.fillText(detune, (width / 2) - 8, height - 30);
-        } else {
-            ctx.fillText(detune, (width / 2) - 5, height - 30);
-        }
-        ctx.font = "50px Arial";
-        ctx.fillText(note, (width / 2) - 15, height / 3 * 2);
+        ctx.fillText(chamber_pitch + ' Hz', 3, 14);
+        ctx.fillText(pitch, 3, 26);
+        let shift_left_px = (detune < 0) ? 8 : 5;
+        ctx.fillText(detune, (width / 2) - shift_left_px, 14);
+        ctx.font = "30px Arial";
+        ctx.fillText(note, (width / 2) - 10, height - 20);
         ctx.beginPath();
         ctx.moveTo(width / 2, 0);
         ctx.lineTo((width / 2), 5);
@@ -43,19 +41,20 @@
         let color = Math.abs(detune) * 10 > 255 ? 255 : Math.abs(detune) * 10;
         ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
         ctx.beginPath();
-        ctx.arc((width / 2), height - 20, 2, 0, 2 * Math.PI);
-        ctx.moveTo((width / 2), height - 20);
+        ctx.arc((width / 2), height - 10, 2, 0, 2 * Math.PI);
+        ctx.moveTo((width / 2), height - 10);
         ctx.lineTo((width / 2) + detune, (Math.abs(detune) - (Math.abs(Math.round(detune / 3)))) + 10);
         ctx.stroke();
         ctx.closePath();
     }
 
-    export function startScreenCanvas(ctx) {
+    export function initCanvas() {
+        let ctx = canvas.getContext("2d");
         ctx.fillStyle = "rgb(245,245,245)";
         ctx.fillRect(0, 0, width, height);
         ctx.fillStyle = "rgb(6, 6, 6)";
-        ctx.font = "18px Arial";
-        ctx.fillText("init app ...", (width / 2) - 45, height / 2);
+        ctx.font = "12px Arial";
+        ctx.fillText("Initializing...", (width / 2) - 30, height / 2);
         ctx.beginPath();
         ctx.moveTo(width / 2, 0);
         ctx.lineTo((width / 2), 5);
@@ -63,18 +62,11 @@
         ctx.closePath();
     }
 
-    let canvas;
-    let ctx;
-
     onMount(async () => {
-        ctx = canvas.getContext("2d");
-        startScreenCanvas(ctx);
+        initCanvas();
         const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: false}).catch(err => {
             console.error(err)
         })
-        let audioTracks = stream.getAudioTracks();
-        let device = audioTracks[0].label;
-        ;
         let AudioContext = window.AudioContext || window.webkitAudioContext || navigator.mozGetUserMedia;
         let aCtx = new AudioContext();
         const analyser = aCtx.createAnalyser();
@@ -82,44 +74,37 @@
         const microphone = aCtx.createMediaStreamSource(stream);
         microphone.connect(analyser);
         let fData = new Float32Array(analyser.frequencyBinCount);
-        let pitch = -1;
-        let note = -1;
-        let detune = 0;
-        const UPDATE_MS = 60;
-        (function update() {
-            analyser.getFloatTimeDomainData(fData);
-            pitch = pitchDetection(fData, aCtx.sampleRate);
-            detune = detuneFromPitch(pitch, note);
-            note = pitchToNote(pitch);
-            updateCanvas(ctx, showDevice(device), showPitch(pitch), showNote(note), showDetune(detune));
-            setTimeout( update, UPDATE_MS );
-        }());
+        update(analyser, aCtx.sampleRate, fData);
     })
+
+    function update(analyser, sampleRate, fData) {
+        const UPDATE_MS = 60;
+        let pitch = pitchDetection(fData, sampleRate);
+        let note = pitchToNote(pitch);
+        let detune = detuneFromPitch(pitch, note);
+        analyser.getFloatTimeDomainData(fData);
+        updateCanvas(showPitch(pitch), showNote(note), showDetune(detune));
+        setTimeout(() => {
+            update(analyser, sampleRate, fData);
+        }, UPDATE_MS);
+    }
 
     function showDetune(detune) {
         return (isNaN(detune) || (detune > 195 || detune < -195)) ? '' : detune;
     }
 
     function showNote(note) {
-        let notevalue = '';
+        let noteValue = '';
         if (note) {
-            notevalue = getNoteString(note);
+            noteValue = getNoteString(note);
         }
-        return notevalue;
+        return noteValue;
     }
 
     function showPitch(pitch) {
-        let current_pitch = pitch === -1 ? 'no signal' : Math.round(pitch);
-        return 'pitch: ' + chamber_pitch + ' Hz ' + current_pitch;
+        return pitch === -1 ? 'no signal' : Math.round(pitch);
     }
-
-    function showDevice(device) {
-        let offset = device.lastIndexOf("(");
-        offset = offset === -1 ? device.length : offset;
-        return device.substring(0, offset - 1);
-    }
-
 </script>
 
-<canvas bind:this={canvas} width={width} height={height} style="border:1px solid #000000;">
+<canvas bind:this={canvas} width={width} height={height}>
 </canvas>

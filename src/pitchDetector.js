@@ -2,19 +2,8 @@
 
 let CHAMBER_PITCH = 440;
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const A3 = 69;
-const MIN_SIGNAL = 0.002;
-const THRESHOLD = 0.002;
-
-export function getChamberPitches() {
-    const CHAMBER_PITCH_MIN = 431;
-    const CHAMBER_PITCH_MAX = 446;
-    let chamber_pitches = [];
-    for (let i = CHAMBER_PITCH_MIN; i <= CHAMBER_PITCH_MAX; i++) {
-        chamber_pitches.push(i);
-    }
-    return chamber_pitches;
-}
+const A1 = 33;
+const THRESHOLD = 0.0025;
 
 export function getChamberPitch() {
     return CHAMBER_PITCH;
@@ -62,7 +51,7 @@ function notEnoughSignal(buf) {
     }
     signal = Math.sqrt(signal / buf.length);
 
-    return signal < MIN_SIGNAL
+    return signal < THRESHOLD
 }
 
 function getSignalStart(buf, threshold) {
@@ -99,7 +88,7 @@ function getMax(buf) {
 }
 
 function noteToFrequency(note) {
-	return CHAMBER_PITCH * Math.pow(2, (note - A3) / NOTES.length);
+	return CHAMBER_PITCH * Math.pow(2, (note - A1) / NOTES.length);
 }
 
 // ACF2+ algorithm
@@ -113,11 +102,11 @@ export function pitchDetection(buf, sampleRate) {
 
 export function pitchToNote(frequency) {
 	let noteNum = NOTES.length * (Math.log(frequency / CHAMBER_PITCH) / Math.log(2));
-	return Math.round(noteNum) + A3;
+	return Math.round(noteNum) + A1;
 }
 
 export function detuneFromPitch(frequency, note) {
-	return Math.floor(1200 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
+	return Math.round(240 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
 }
 
 export function getNoteString(note) {

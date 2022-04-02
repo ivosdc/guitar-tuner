@@ -11,13 +11,13 @@
 <div class="my-tuner">
     <a href="https://gitarrenakkorde.org" target="_blank"><img
             src="https://ivosdc.github.io/guitar-tuner/static/gitarrenakkorde.png" alt="gitarrenakkorde.org"></a>
-    <a class="linkme" href="https://github.com/ivosdc/guitar-tuner" target="_blank">&lt;guitar-tuner/&gt;</a>
-    <guitar-tuner id="guitar-tuner"></guitar-tuner>
-    <div id="pitch-tuner">
-        pitch:
-        <span id="pitch-down" class="pitch-tune"> down </span>/
-        <span id="pitch-up" class="pitch-tune"> up </span>
+    <div>
+        <span id="pitch-down" class="pitch-tune"> <- </span>
+        <span class="pitch-tune">pitch</span>
+        <span id="pitch-up" class="pitch-tune"> +> </span>
     </div>
+    <guitar-tuner id="guitar-tuner" />
+    <a class="link-me" href="https://github.com/ivosdc/guitar-tuner" target="_blank">license</a>
 </div>
 </body>
 <script>
@@ -32,16 +32,13 @@
 
     function setPitchUp() {
         pitch++;
-        console.log(pitch)
         guitarTuner.setAttribute('chamber_pitch', pitch.toString());
     }
 
     function setPitchDown() {
         pitch--;
-        console.log(pitch)
         guitarTuner.setAttribute('chamber_pitch', pitch.toString());
     }
-
 </script>
 </html>
 
@@ -56,9 +53,13 @@
     }
 
     .pitch-tune {
-        color: #6e6e6e;
+        vertical-align: top;
+        color: #E1E1E1;
         cursor: pointer;
-        font-weight: bold;
+        font-weight: lighter;
+        margin-bottom: 3px;
+        font-size: small;
+        padding: 0.3rem;
     }
 
     .my-tuner {
@@ -68,5 +69,11 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
+        font-weight: lighter;
+        font-size: x-small;
+    }
+    .link-me {
+        color: #6e6e6e;
+        font-size: x-small;
     }
 </style>

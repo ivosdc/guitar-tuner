@@ -15,32 +15,39 @@ or include into your website.
 
 ## Parameter
 - chamber_pitch; default: 440
-- width; default: 300
-- height; default: 150
+- width; default: 180
+- height; default: 80
 - updateCanvas(ctx, device, pitch, note, detune)
 
-example:
-```html
-export function updateCanvas(ctx, device, pitch, note, detune) {
-    ctx.fillStyle = "rgb(245,245,245)";
-    ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = "rgb(0, 0, 0)";
-    ctx.font = "9px Arial"
-    ctx.fillText(device, 1, height - 1);
-    ctx.font = "12px Arial";
-    ctx.fillText("Hz: " + pitch, 5, 15);
-    ctx.fillText(detune, (width / 2) - 10, 15);
-    ctx.font = "30px Arial";
-    ctx.fillText(note, (width / 2) - 10, height - 20);
-    ctx.beginPath();
-    ctx.moveTo(width / 2, 0);
-    ctx.lineTo((width / 2), 5);
-    ctx.stroke();
-    ctx.closePath();
-    ctx.beginPath();
-    ctx.moveTo(width / 2, height);
-    ctx.lineTo((width / 2) + detune, Math.abs(detune));
-    ctx.stroke();
-    ctx.closePath();
-}
+example / default:
+```js
+let canvas;
+function updateCanvas(pitch, note, detune) {
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgb(245,245,235)";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "rgb(166, 166, 166)";
+        ctx.font = "12px Arial";
+        ctx.fillText(chamber_pitch + ' Hz', 3, 14);
+        ctx.fillText(pitch, 3, 26);
+        let shift_left_px = (detune < 0) ? 8 : 5;
+        ctx.fillText(detune, (width / 2) - shift_left_px, 14);
+        ctx.font = "30px Arial";
+        ctx.fillText(note, (width / 2) - 10, height - 20);
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo((width / 2), 5);
+        ctx.stroke();
+        ctx.closePath();
+        let color = Math.abs(detune) * 10 > 255 ? 255 : Math.abs(detune) * 10;
+        ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
+        ctx.beginPath();
+        ctx.arc((width / 2), height - 10, 2, 0, 2 * Math.PI);
+        ctx.moveTo((width / 2), height - 10);
+        ctx.lineTo((width / 2) + detune, (Math.abs(detune) - (Math.abs(Math.round(detune / 3)))) + 10);
+        ctx.stroke();
+        ctx.closePath();
+    }
 ```
+
+'canvas' is bound to the canvas-element inside app-context. Must be used to create the 2D-context.
