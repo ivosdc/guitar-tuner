@@ -14,6 +14,7 @@ or include into your website.
 ```
 
 ## Parameter
+- chamber_pitch; default: 440
 - width; default: 300
 - height; default: 150
 - updateCanvas(ctx, device, pitch, note, detune)
