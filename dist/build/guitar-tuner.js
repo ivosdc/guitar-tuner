@@ -293,12 +293,107 @@ var GuitarTuner = (function () {
         };
     }
 
+    // Sourced: https://github.com/peterkhayes/pitchfinder/blob/master/src/detectors/amdf.ts
+
+    const DEFAULT_AMDF_PARAMS = {
+        sampleRate: 44100,
+        minFrequency: 50,
+        maxFrequency: 1000,
+        ratio: 10,
+        sensitivity: 0.02,
+    };
+
+    function AMDF(params) {
+        const config = {
+            ...DEFAULT_AMDF_PARAMS,
+            ...params,
+        };
+        const sampleRate = config.sampleRate;
+        const minFrequency = config.minFrequency;
+        const maxFrequency = config.maxFrequency;
+        const sensitivity = config.sensitivity;
+        const ratio = config.ratio;
+        const amd = [];
+
+        /* Round in such a way that both exact minPeriod as
+         exact maxPeriod lie inside the rounded span minPeriod-maxPeriod,
+         thus ensuring that minFrequency and maxFrequency can be found
+         even in edge cases */
+        const maxPeriod = Math.ceil(sampleRate / minFrequency);
+        const minPeriod = Math.floor(sampleRate / maxFrequency);
+
+        return function AMDFDetector(float32AudioBuffer) {
+            const maxShift = float32AudioBuffer.length;
+
+            let t = 0;
+            let minval = Infinity;
+            let maxval = -Infinity;
+            let frames1, frames2, calcSub, i, j, u, aux1, aux2;
+
+            // Find the average magnitude difference for each possible period offset.
+            for (i = 0; i < maxShift; i++) {
+                if (minPeriod <= i && i <= maxPeriod) {
+                    for (
+                        aux1 = 0, aux2 = i, t = 0, frames1 = [], frames2 = [];
+                        aux1 < maxShift - i;
+                        t++, aux2++, aux1++
+                    ) {
+                        frames1[t] = float32AudioBuffer[aux1];
+                        frames2[t] = float32AudioBuffer[aux2];
+                    }
+
+                    // Take the difference between these frames.
+                    const frameLength = frames1.length;
+                    calcSub = [];
+                    for (u = 0; u < frameLength; u++) {
+                        calcSub[u] = frames1[u] - frames2[u];
+                    }
+
+                    // Sum the differences.
+                    let summation = 0;
+                    for (u = 0; u < frameLength; u++) {
+                        summation += Math.abs(calcSub[u]);
+                    }
+                    amd[i] = summation;
+                }
+            }
+
+            for (j = minPeriod; j < maxPeriod; j++) {
+                if (amd[j] < minval) minval = amd[j];
+                if (amd[j] > maxval) maxval = amd[j];
+            }
+
+            const cutoff = Math.round(sensitivity * (maxval - minval) + minval);
+            for (j = minPeriod; j <= maxPeriod && amd[j] > cutoff; j++);
+
+            const searchLength = minPeriod / 2;
+            minval = amd[j];
+            let minpos = j;
+            for (i = j - 1; i < j + searchLength && i <= maxPeriod; i++) {
+                if (amd[i] < minval) {
+                    minval = amd[i];
+                    minpos = i;
+                }
+            }
+
+            if (Math.round(amd[minpos] * ratio) < maxval) {
+                return sampleRate / minpos;
+            } else {
+                return -1;
+            }
+        };
+    }
+
     //MIT License, https://github.com/ivosdc/guitar-tuner/tree/main/src/pitchDetector.js
 
     let CHAMBER_PITCH = 440;
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const A1 = 33;
-    const THRESHOLD = 0.0025;
+    const A1 = 45;
+
+    /*
+      const MIN_SIGNAL = 0.01;
+      const THRESHOLD = 0.2;
+    */
 
     function getChamberPitch() {
         return CHAMBER_PITCH;
@@ -311,88 +406,8 @@ var GuitarTuner = (function () {
         return getChamberPitch();
     }
 
-    function getMaxPos(correlated, SIZE) {
-        let max = 0;
-        while (correlated[max] > correlated[max + 1]) {
-            max++;
-        }
-
-        let maxval = -1;
-        let maxpos = -1;
-        for (let i = max; i < SIZE; i++) {
-            if (correlated[i] > maxval) {
-                maxval = correlated[i];
-                maxpos = i;
-            }
-        }
-        return maxpos;
-    }
-
-    function calcBufferArray(buf) {
-        let correlations = new Array(buf.length).fill(0);
-        for (let i = 0; i < buf.length; i++) {
-            for (let j = 0; j < buf.length - i; j++) {
-                correlations[i] = correlations[i] + buf[j] * buf[j + i];
-            }
-        }
-
-        return correlations;
-    }
-
-    function notEnoughSignal(buf) {
-        let signal = 0;
-        for (let i = 0; i < buf.length; i++) {
-            signal += buf[i] * buf[i];
-        }
-        signal = Math.sqrt(signal / buf.length);
-
-        return signal < THRESHOLD
-    }
-
-    function getSignalStart(buf, threshold) {
-        let start = 0;
-        for (let i = 0; i < buf.length / 2; i++) {
-            if (Math.abs(buf[i]) < threshold) {
-                start = i;
-                break;
-            }
-        }
-        return start;
-    }
-
-    function getSignalEnd(buf, threshold) {
-        let end = buf.length - 1;
-        for (let i = 1; i < buf.length / 2; i++) {
-            if (Math.abs(buf[buf.length - i]) < threshold) {
-                end = buf.length - i;
-                break;
-            }
-        }
-        return end;
-    }
-
-    function getMax(buf) {
-        const correlated = calcBufferArray(buf);
-        let max = getMaxPos(correlated, buf.length);
-        const maxA = (correlated[max - 1] + correlated[max + 1] - 2 * correlated[max]) / 2;
-        const maxB = (correlated[max + 1] - correlated[max - 1]) / 2;
-        if (maxA >= 0) {
-            max = max - maxB / (2 * maxA);
-        }
-        return max;
-    }
-
     function noteToFrequency(note) {
     	return CHAMBER_PITCH * Math.pow(2, (note - A1) / NOTES.length);
-    }
-
-    // ACF2+ algorithm
-    function pitchDetection(buf, sampleRate) {
-        if (notEnoughSignal(buf)) {
-            return -1;
-        }
-        buf = buf.slice(getSignalStart(buf, THRESHOLD), getSignalEnd(buf, THRESHOLD));
-    	return sampleRate / getMax(buf);
     }
 
     function pitchToNote(frequency) {
@@ -449,7 +464,9 @@ var GuitarTuner = (function () {
     }
 
     function showPitch(pitch) {
-    	return pitch === -1 ? 'no signal' : Math.round(pitch);
+    	return Math.round(pitch) === -1
+    	? 'no signal'
+    	: Math.round(pitch);
     }
 
     function instance($$self, $$props, $$invalidate) {
@@ -462,7 +479,6 @@ var GuitarTuner = (function () {
     		mute = typeof mute === 'string' ? JSON.parse(mute) : mute;
 
     		if (mute !== undefined) {
-    			console.log(mute);
     			mute ? stopMicrophone() : startMicrophone();
     		}
 
@@ -559,8 +575,13 @@ var GuitarTuner = (function () {
 
     	function update(analyser, sampleRate, fData) {
     		const UPDATE_MS = 60;
-    		let pitch = pitchDetection(fData, sampleRate);
+    		const multiplier = sampleRate / 44100;
+    		const pitchfinder = AMDF();
+    		let pitch = pitchfinder(fData) * multiplier;
+
+    		//let pitch = pitchDetection(fData, sampleRate);
     		let note = pitchToNote(pitch);
+
     		let detune = detuneFromPitch(pitch, note);
     		analyser.getFloatTimeDomainData(fData);
 

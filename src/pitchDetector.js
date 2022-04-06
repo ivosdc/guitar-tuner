@@ -2,8 +2,15 @@
 
 let CHAMBER_PITCH = 440;
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const A1 = 33;
-const THRESHOLD = 0.0025;
+const A1 = 45;
+const MIN_SIGNAL = 0.01;
+const THRESHOLD = 0.0025
+;
+
+/*
+  const MIN_SIGNAL = 0.01;
+  const THRESHOLD = 0.2;
+*/
 
 export function getChamberPitch() {
     return CHAMBER_PITCH;
@@ -51,7 +58,7 @@ function notEnoughSignal(buf) {
     }
     signal = Math.sqrt(signal / buf.length);
 
-    return signal < THRESHOLD
+    return signal < MIN_SIGNAL;
 }
 
 function getSignalStart(buf, threshold) {

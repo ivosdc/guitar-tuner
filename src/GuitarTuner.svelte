@@ -1,5 +1,6 @@
 <script>
     import {onMount} from 'svelte';
+    import * as Pitchfinder from './pitchfinder/amdf';
     import {
         pitchDetection,
         pitchToNote,
@@ -108,7 +109,10 @@
 
     function update(analyser, sampleRate, fData) {
         const UPDATE_MS = 60;
-        let pitch = pitchDetection(fData, sampleRate);
+        const multiplier = sampleRate / 44100;
+        const pitchfinder = Pitchfinder.AMDF();
+        let pitch = pitchfinder(fData)  * multiplier;
+        //let pitch = pitchDetection(fData, sampleRate);
         let note = pitchToNote(pitch);
         let detune = detuneFromPitch(pitch, note);
         analyser.getFloatTimeDomainData(fData);
@@ -133,7 +137,7 @@
     }
 
     function showPitch(pitch) {
-        return pitch === -1 ? 'no signal' : Math.round(pitch);
+        return Math.round(pitch) === -1 ? 'no signal' : Math.round(pitch);
     }
 </script>
 
