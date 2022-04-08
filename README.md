@@ -21,7 +21,7 @@ or include into your website.
 - width; default: 180
 - height; default: 80
 - mute; default: false
-- updateCanvas(ctx, device, pitch, note, detune)
+- updateCanvas(pitch, note, detune)
 
 example / default:
 ```js
