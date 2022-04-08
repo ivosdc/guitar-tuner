@@ -1,3 +1,4 @@
+
 # Guitar-Tuner / pitch detector
 - Web-component: `<guitar-tuner></guitar-tuner>`
 #### ...made with Svelte
@@ -27,34 +28,31 @@ example / default:
 ```js
 let canvas;
 function updateCanvas(pitch, note, detune) {
-        let ctx = canvas.getContext("2d");
-        ctx.fillStyle = "rgb(245,245,235)";
-        ctx.fillRect(0, 0, width, height);
-        ctx.fillStyle = "rgb(166, 166, 166)";
-        ctx.font = "12px Arial";
-        ctx.fillText(chamber_pitch + ' Hz', 3, 14);
-        ctx.fillText(pitch, 3, 26);
-        let shift_left_px = (detune < 0) ? 8 : 5;
-        ctx.fillText(detune, (width / 2) - shift_left_px, 14);
-        ctx.font = "30px Arial";
-        ctx.fillText(note, (width / 2) - 10, height - 20);
-        ctx.beginPath();
-        ctx.moveTo(width / 2, 0);
-        ctx.lineTo((width / 2), 5);
-        ctx.stroke();
-        ctx.closePath();
-        let color = Math.abs(detune) * 10 > 255 ? 255 : Math.abs(detune) * 10;
-        ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
-        ctx.beginPath();
-        ctx.arc((width / 2), height - 10, 2, 0, 2 * Math.PI);
-        ctx.moveTo((width / 2), height - 10);
-        ctx.lineTo((width / 2) + detune, (Math.abs(detune) - (Math.abs(Math.round(detune / 3)))) + 10);
-        ctx.stroke();
-        ctx.closePath();
+    clearCanvas();
+    let ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgb(166, 166, 166)";
+    ctx.font = "12px Arial";
+    ctx.fillText(chamber_pitch + ' Hz', 3, 14);
+    ctx.fillText(pitch, 3, 26);
+    ctx.font = "28px Arial";
+    ctx.fillText(note, (width / 2) - 10, 30);
+    let color = Math.abs(detune) * 10 > 255 ? 255 : Math.abs(detune) * 10;
+    ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
+    ctx.beginPath();
+    ctx.moveTo((width / 2), height - 5);
+    let scale = Math.abs(detune) > 5 ? 2 : 1;
+    ctx.lineTo((width / 2) + detune * scale, height - 5);
+    ctx.lineTo((width / 2) + detune * scale, height - 15);
+    ctx.lineTo((width / 2), height - 15);
+    ctx.lineTo((width / 2), height - 5);
+    ctx.stroke();
+    ctx.closePath();
+    ctx.fillStyle = "rgb(" + color + ", 0, 0)";
+    ctx.fill();
     }
 ```
-
-'canvas' is bound to the canvas-element inside app-context. Must be used to create the 2D-context.
+`clearCanvas();` should be used to clear the canvas.
+`canvas` is bound to the canvas-element inside app-context. Must be used to create the 2D-context.
 
 
 JS-Example using Parameter.

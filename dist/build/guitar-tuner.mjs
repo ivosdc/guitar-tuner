@@ -465,7 +465,7 @@ var GuitarTuner = (function () {
 
     function instance($$self, $$props, $$invalidate) {
     	let { width = 180 } = $$props;
-    	let { height = 80 } = $$props;
+    	let { height = 50 } = $$props;
     	let { mute } = $$props;
     	let { chamber_pitch = getChamberPitch() } = $$props;
 
@@ -492,15 +492,8 @@ var GuitarTuner = (function () {
     		ctx.font = "12px Arial";
     		ctx.fillText(chamber_pitch + ' Hz', 3, 14);
     		ctx.fillText(pitch, 3, 26);
-    		let shift_left_px = detune < 0 ? 8 : 5;
-    		ctx.fillText(detune, width / 2 - shift_left_px, 14);
-    		ctx.font = "30px Arial";
-    		ctx.fillText(note, width / 2 - 10, height - 20);
-    		ctx.beginPath();
-    		ctx.moveTo(width / 2, 0);
-    		ctx.lineTo(width / 2, 5);
-    		ctx.stroke();
-    		ctx.closePath();
+    		ctx.font = "28px Arial";
+    		ctx.fillText(note, width / 2 - 10, 30);
 
     		let color = Math.abs(detune) * 10 > 255
     		? 255
@@ -508,11 +501,16 @@ var GuitarTuner = (function () {
 
     		ctx.strokeStyle = "rgb(" + color + ", 0, 0)";
     		ctx.beginPath();
-    		ctx.arc(width / 2, height - 10, 2, 0, 2 * Math.PI);
-    		ctx.moveTo(width / 2, height - 10);
-    		ctx.lineTo(width / 2 + detune, Math.abs(detune) - Math.abs(Math.round(detune / 3)) + 10);
+    		ctx.moveTo(width / 2, height - 5);
+    		let scale = Math.abs(detune) > 5 ? 2 : 1;
+    		ctx.lineTo(width / 2 + detune * scale, height - 5);
+    		ctx.lineTo(width / 2 + detune * scale, height - 15);
+    		ctx.lineTo(width / 2, height - 15);
+    		ctx.lineTo(width / 2, height - 5);
     		ctx.stroke();
     		ctx.closePath();
+    		ctx.fillStyle = "rgb(" + color + ", 0, 0)";
+    		ctx.fill();
     	}
 
     	function clearCanvas() {
