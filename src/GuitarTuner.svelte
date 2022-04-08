@@ -1,14 +1,13 @@
 <script>
     import {onMount} from 'svelte';
-    import * as Pitchfinder from './pitchfinder/amdf';
+    import {AMDF} from './pitch/amdf';
     import {
-        pitchDetection,
         pitchToNote,
         detuneFromPitch,
         getNoteString,
         getChamberPitch,
         setChamberPitch
-    } from './pitchDetector.js';
+    } from './pitch/pitchService.js';
 
 
     export let width = 180;
@@ -109,10 +108,15 @@
 
     function update(analyser, sampleRate, fData) {
         const UPDATE_MS = 60;
-        const multiplier = sampleRate / 44100;
-        const pitchfinder = Pitchfinder.AMDF();
-        let pitch = pitchfinder(fData)  * multiplier;
-        //let pitch = pitchDetection(fData, sampleRate);
+        const amdf_config = {
+            sampleRate: sampleRate,
+            minFrequency: 50,
+            maxFrequency: 1000,
+            ratio: 10,
+            sensitivity: 0.02,
+        }
+        const pitchDetector = AMDF(amdf_config);
+        let pitch = pitchDetector(fData);
         let note = pitchToNote(pitch);
         let detune = detuneFromPitch(pitch, note);
         analyser.getFloatTimeDomainData(fData);

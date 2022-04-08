@@ -2,10 +2,10 @@
 
 const DEFAULT_AMDF_PARAMS = {
     sampleRate: 44100,
-    minFrequency: 50,
+    minFrequency: 82,
     maxFrequency: 1000,
-    ratio: 10,
-    sensitivity: 0.02,
+    ratio: 5,
+    sensitivity: 0.1
 };
 
 export function AMDF(params) {

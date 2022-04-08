@@ -1,27 +1,6 @@
-//MIT License, https://github.com/ivosdc/guitar-tuner/tree/main/src/pitchDetector.js
-
-let CHAMBER_PITCH = 440;
-const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const A1 = 45;
 const MIN_SIGNAL = 0.01;
-const THRESHOLD = 0.0025
-;
+const THRESHOLD = 0.0025;
 
-/*
-  const MIN_SIGNAL = 0.01;
-  const THRESHOLD = 0.2;
-*/
-
-export function getChamberPitch() {
-    return CHAMBER_PITCH;
-}
-
-export function setChamberPitch(pitch) {
-    if (Number(pitch) ) {
-        CHAMBER_PITCH = pitch;
-    }
-    return getChamberPitch();
-}
 
 function getMaxPos(correlated, SIZE) {
     let max = 0;
@@ -94,28 +73,12 @@ function getMax(buf) {
     return max;
 }
 
-function noteToFrequency(note) {
-	return CHAMBER_PITCH * Math.pow(2, (note - A1) / NOTES.length);
-}
 
 // ACF2+ algorithm
-export function pitchDetection(buf, sampleRate) {
+export function acf2(buf, sampleRate) {
     if (notEnoughSignal(buf)) {
         return -1;
     }
     buf = buf.slice(getSignalStart(buf, THRESHOLD), getSignalEnd(buf, THRESHOLD));
-	return sampleRate / getMax(buf);
-}
-
-export function pitchToNote(frequency) {
-	let noteNum = NOTES.length * (Math.log(frequency / CHAMBER_PITCH) / Math.log(2));
-	return Math.round(noteNum) + A1;
-}
-
-export function detuneFromPitch(frequency, note) {
-	return Math.round(NOTES.length * 100 * Math.log(frequency / noteToFrequency(note)) / Math.log(2));
-}
-
-export function getNoteString(note) {
-    return NOTES[note % NOTES.length]
+    return sampleRate / getMax(buf);
 }

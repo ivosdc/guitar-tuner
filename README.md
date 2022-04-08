@@ -1,4 +1,4 @@
-# Guitar&Bass Tuner / pitch detector
+# Guitar-Tuner / pitch detector
 - Web-component: `<guitar-tuner></guitar-tuner>`
 #### ...made with Svelte
 

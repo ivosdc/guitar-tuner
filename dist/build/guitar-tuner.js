@@ -297,10 +297,10 @@ var GuitarTuner = (function () {
 
     const DEFAULT_AMDF_PARAMS = {
         sampleRate: 44100,
-        minFrequency: 50,
+        minFrequency: 82,
         maxFrequency: 1000,
-        ratio: 10,
-        sensitivity: 0.02,
+        ratio: 5,
+        sensitivity: 0.1
     };
 
     function AMDF(params) {
@@ -384,16 +384,9 @@ var GuitarTuner = (function () {
         };
     }
 
-    //MIT License, https://github.com/ivosdc/guitar-tuner/tree/main/src/pitchDetector.js
-
     let CHAMBER_PITCH = 440;
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const A1 = 45;
-
-    /*
-      const MIN_SIGNAL = 0.01;
-      const THRESHOLD = 0.2;
-    */
 
     function getChamberPitch() {
         return CHAMBER_PITCH;
@@ -406,8 +399,9 @@ var GuitarTuner = (function () {
         return getChamberPitch();
     }
 
+
     function noteToFrequency(note) {
-    	return CHAMBER_PITCH * Math.pow(2, (note - A1) / NOTES.length);
+        return CHAMBER_PITCH * Math.pow(2, (note - A1) / NOTES.length);
     }
 
     function pitchToNote(frequency) {
@@ -575,13 +569,18 @@ var GuitarTuner = (function () {
 
     	function update(analyser, sampleRate, fData) {
     		const UPDATE_MS = 60;
-    		const multiplier = sampleRate / 44100;
-    		const pitchfinder = AMDF();
-    		let pitch = pitchfinder(fData) * multiplier;
 
-    		//let pitch = pitchDetection(fData, sampleRate);
+    		const amdf_config = {
+    			sampleRate,
+    			minFrequency: 50,
+    			maxFrequency: 1000,
+    			ratio: 10,
+    			sensitivity: 0.02
+    		};
+
+    		const pitchDetector = AMDF(amdf_config);
+    		let pitch = pitchDetector(fData);
     		let note = pitchToNote(pitch);
-
     		let detune = detuneFromPitch(pitch, note);
     		analyser.getFloatTimeDomainData(fData);
 
