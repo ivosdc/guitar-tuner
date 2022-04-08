@@ -488,6 +488,10 @@ var GuitarTuner = (function () {
     	function updateCanvas(pitch, note, detune) {
     		clearCanvas();
     		let ctx = canvas.getContext("2d");
+    		drawCanvas(ctx, pitch, note, detune);
+    	}
+
+    	function drawCanvas(ctx, pitch, note, detune) {
     		ctx.fillStyle = "rgb(166, 166, 166)";
     		ctx.font = "12px Arial";
     		ctx.fillText(chamber_pitch + ' Hz', 3, 14);
@@ -634,7 +638,7 @@ var GuitarTuner = (function () {
     		canvas,
     		mute,
     		chamber_pitch,
-    		updateCanvas,
+    		drawCanvas,
     		maintainCanvas,
     		canvas_1_binding
     	];
@@ -659,7 +663,7 @@ var GuitarTuner = (function () {
     				height: 1,
     				mute: 3,
     				chamber_pitch: 4,
-    				updateCanvas: 5,
+    				drawCanvas: 5,
     				maintainCanvas: 6
     			},
     			null
@@ -678,7 +682,7 @@ var GuitarTuner = (function () {
     	}
 
     	static get observedAttributes() {
-    		return ["width", "height", "mute", "chamber_pitch", "updateCanvas", "maintainCanvas"];
+    		return ["width", "height", "mute", "chamber_pitch", "drawCanvas", "maintainCanvas"];
     	}
 
     	get width() {
@@ -717,7 +721,7 @@ var GuitarTuner = (function () {
     		flush();
     	}
 
-    	get updateCanvas() {
+    	get drawCanvas() {
     		return this.$$.ctx[5];
     	}
 

@@ -22,14 +22,11 @@ or include into your website.
 - width; default: 180
 - height; default: 80
 - mute; default: false
-- updateCanvas(pitch, note, detune)
+- drawCanvas(ctx, pitch, note, detune)
 
 example / default:
 ```js
-let canvas;
-function updateCanvas(pitch, note, detune) {
-    clearCanvas();
-    let ctx = canvas.getContext("2d");
+function drawCanvas(ctx, pitch, note, detune) {
     ctx.fillStyle = "rgb(166, 166, 166)";
     ctx.font = "12px Arial";
     ctx.fillText(chamber_pitch + ' Hz', 3, 14);
@@ -49,11 +46,8 @@ function updateCanvas(pitch, note, detune) {
     ctx.closePath();
     ctx.fillStyle = "rgb(" + color + ", 0, 0)";
     ctx.fill();
-    }
+}
 ```
-`clearCanvas();` should be used to clear the canvas.
-`canvas` is bound to the canvas-element inside app-context. Must be used to create the 2D-context.
-
 
 JS-Example using Parameter.
 ```html
