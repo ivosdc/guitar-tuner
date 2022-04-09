@@ -10,7 +10,8 @@
 
 <body>
 <div class="my-tuner">
-    <img src="https://ivosdc.github.io/guitar-tuner/static/x-strings-logo.png" width="200px" alt="X-Strings">
+    <img src="https://ivosdc.github.io/guitar-tuner/static/x-strings-logo.png" width="100" alt="X-Strings">
+    <p class="text">Guitar tuner and chord overview.</p>
     <div>
         <span id="pitch-down" class="pitch-tune"><</span>
         <span id="chamber_pitch" class="pitch-tune">pitch</span>
@@ -18,10 +19,11 @@
     </div>
     <guitar-tuner id="guitar-tuner"></guitar-tuner>
     <span id="mute" class="pitch-tune"> mic[on/off]</span>
+    <p></p>
     <guitar-chords></guitar-chords>
-    <a class="link-me" href="https://github.com/ivosdc/guitar-tuner" target="_blank">source</a>
-    <a href="https://gitarrenakkorde.org" target="_blank" width="100px"><img
-            src="https://ivosdc.github.io/guitar-tuner/static/gitarrenakkorde.png" alt="gitarrenakkorde.org"></a>
+    <p>
+        <a class="link-me" href="https://github.com/ivosdc/guitar-tuner" target="_blank">License & Source</a>
+    </p>
 </div>
 </body>
 <script>
@@ -37,6 +39,7 @@
     mute.onclick = toggleMute;
 
     let muted = false;
+
     function toggleMute() {
         muted = !muted;
         guitarTuner.setAttribute('mute', muted.toString());
@@ -75,7 +78,7 @@
     }
 
     .my-tuner {
-        width:100%;
+        width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
@@ -84,6 +87,7 @@
         font-weight: lighter;
         font-size: x-small;
     }
+
     .link-me {
         color: #6e6e6e;
         font-size: x-small;
