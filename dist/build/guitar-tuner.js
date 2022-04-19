@@ -293,95 +293,90 @@ var GuitarTuner = (function () {
         };
     }
 
-    // Sourced: https://github.com/peterkhayes/pitchfinder/blob/master/src/detectors/amdf.ts
+    const MIN_SIGNAL = 0.01;
+    const THRESHOLD = 0.00025;
 
-    const DEFAULT_AMDF_PARAMS = {
-        sampleRate: 44100,
-        minFrequency: 82,
-        maxFrequency: 1000,
-        ratio: 5,
-        sensitivity: 0.1
-    };
 
-    function AMDF(params) {
-        const config = {
-            ...DEFAULT_AMDF_PARAMS,
-            ...params,
-        };
-        const sampleRate = config.sampleRate;
-        const minFrequency = config.minFrequency;
-        const maxFrequency = config.maxFrequency;
-        const sensitivity = config.sensitivity;
-        const ratio = config.ratio;
-        const amd = [];
+    function getMaxPos(correlated, SIZE) {
+        let max = 0;
+        while (correlated[max] > correlated[max + 1]) {
+            max++;
+        }
 
-        /* Round in such a way that both exact minPeriod as
-         exact maxPeriod lie inside the rounded span minPeriod-maxPeriod,
-         thus ensuring that minFrequency and maxFrequency can be found
-         even in edge cases */
-        const maxPeriod = Math.ceil(sampleRate / minFrequency);
-        const minPeriod = Math.floor(sampleRate / maxFrequency);
-
-        return function AMDFDetector(float32AudioBuffer) {
-            const maxShift = float32AudioBuffer.length;
-
-            let t = 0;
-            let minval = Infinity;
-            let maxval = -Infinity;
-            let frames1, frames2, calcSub, i, j, u, aux1, aux2;
-
-            // Find the average magnitude difference for each possible period offset.
-            for (i = 0; i < maxShift; i++) {
-                if (minPeriod <= i && i <= maxPeriod) {
-                    for (
-                        aux1 = 0, aux2 = i, t = 0, frames1 = [], frames2 = [];
-                        aux1 < maxShift - i;
-                        t++, aux2++, aux1++
-                    ) {
-                        frames1[t] = float32AudioBuffer[aux1];
-                        frames2[t] = float32AudioBuffer[aux2];
-                    }
-
-                    // Take the difference between these frames.
-                    const frameLength = frames1.length;
-                    calcSub = [];
-                    for (u = 0; u < frameLength; u++) {
-                        calcSub[u] = frames1[u] - frames2[u];
-                    }
-
-                    // Sum the differences.
-                    let summation = 0;
-                    for (u = 0; u < frameLength; u++) {
-                        summation += Math.abs(calcSub[u]);
-                    }
-                    amd[i] = summation;
-                }
+        let maxValue = -1;
+        let maxPos = -1;
+        for (let i = max; i < SIZE; i++) {
+            if (correlated[i] > maxValue) {
+                maxValue = correlated[i];
+                maxPos = i;
             }
+        }
+        return maxPos;
+    }
 
-            for (j = minPeriod; j < maxPeriod; j++) {
-                if (amd[j] < minval) minval = amd[j];
-                if (amd[j] > maxval) maxval = amd[j];
+    function calcBufferArray(buf) {
+        let correlations = new Array(buf.length).fill(0);
+        for (let i = 0; i < buf.length; i++) {
+            for (let j = 0; j < buf.length - i; j++) {
+                correlations[i] = correlations[i] + buf[j] * buf[j + i];
             }
+        }
 
-            const cutoff = Math.round(sensitivity * (maxval - minval) + minval);
-            for (j = minPeriod; j <= maxPeriod && amd[j] > cutoff; j++);
+        return correlations;
+    }
 
-            const searchLength = minPeriod / 2;
-            minval = amd[j];
-            let minpos = j;
-            for (i = j - 1; i < j + searchLength && i <= maxPeriod; i++) {
-                if (amd[i] < minval) {
-                    minval = amd[i];
-                    minpos = i;
-                }
+    function isEnoughSignal(buf) {
+        let signal = 0;
+        for (let i = 0; i < buf.length; i++) {
+            signal += buf[i] * buf[i];
+        }
+        signal = Math.sqrt(signal / buf.length);
+
+        return signal > MIN_SIGNAL;
+    }
+
+    function getSignalStart(buf, threshold) {
+        let start = 0;
+        for (let i = 0; i < buf.length / 2; i++) {
+            if (Math.abs(buf[i]) < threshold) {
+                start = i;
+                break;
             }
+        }
+        return start;
+    }
 
-            if (Math.round(amd[minpos] * ratio) < maxval) {
-                return sampleRate / minpos;
-            } else {
-                return -1;
+    function getSignalEnd(buf, threshold) {
+        let end = buf.length - 1;
+        for (let i = 1; i < buf.length / 2; i++) {
+            if (Math.abs(buf[buf.length - i]) < threshold) {
+                end = buf.length - i;
+                break;
             }
-        };
+        }
+        return end;
+    }
+
+    function getMax(buf) {
+        const correlated = calcBufferArray(buf);
+        let max = getMaxPos(correlated, buf.length);
+        const maxA = (correlated[max - 1] + correlated[max + 1] - 2 * correlated[max]) / 2;
+        const maxB = (correlated[max + 1] - correlated[max - 1]) / 2;
+        if (maxA >= 0) {
+            max = max - maxB / (2 * maxA);
+        }
+        return max;
+    }
+
+
+    // ACF2+ algorithm
+    function acf2(buf, sampleRate) {
+        buf = buf.slice(getSignalStart(buf, THRESHOLD), getSignalEnd(buf, THRESHOLD));
+        if(isEnoughSignal(buf))
+        {
+            return sampleRate / getMax(buf);
+        }
+        return -1;
     }
 
     let CHAMBER_PITCH = 440;
@@ -562,7 +557,7 @@ var GuitarTuner = (function () {
     		let AudioContext = window.AudioContext || window.webkitAudioContext || navigator.mozGetUserMedia;
     		let aCtx = new AudioContext();
     		const analyser = aCtx.createAnalyser();
-    		analyser.fftSize = 2048;
+    		analyser.fftSize = 4096;
     		const microphone = aCtx.createMediaStreamSource(stream);
     		microphone.connect(analyser);
     		let fData = new Float32Array(analyser.frequencyBinCount);
@@ -572,16 +567,10 @@ var GuitarTuner = (function () {
     	function update(analyser, sampleRate, fData) {
     		const UPDATE_MS = 60;
 
-    		const amdf_config = {
-    			sampleRate,
-    			minFrequency: 50,
-    			maxFrequency: 1000,
-    			ratio: 10,
-    			sensitivity: 0.02
-    		};
+    		//const pitchDetector = AMDF(amdf_config);
+    		//let pitch = pitchDetector(fData);
+    		let pitch = acf2(fData, sampleRate);
 
-    		const pitchDetector = AMDF(amdf_config);
-    		let pitch = pitchDetector(fData);
     		let note = pitchToNote(pitch);
     		let detune = detuneFromPitch(pitch, note);
     		analyser.getFloatTimeDomainData(fData);

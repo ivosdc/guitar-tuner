@@ -1,5 +1,5 @@
 const MIN_SIGNAL = 0.01;
-const THRESHOLD = 0.0025;
+const THRESHOLD = 0.00025;
 
 
 function getMaxPos(correlated, SIZE) {
@@ -8,15 +8,15 @@ function getMaxPos(correlated, SIZE) {
         max++;
     }
 
-    let maxval = -1;
-    let maxpos = -1;
+    let maxValue = -1;
+    let maxPos = -1;
     for (let i = max; i < SIZE; i++) {
-        if (correlated[i] > maxval) {
-            maxval = correlated[i];
-            maxpos = i;
+        if (correlated[i] > maxValue) {
+            maxValue = correlated[i];
+            maxPos = i;
         }
     }
-    return maxpos;
+    return maxPos;
 }
 
 function calcBufferArray(buf) {
@@ -30,14 +30,14 @@ function calcBufferArray(buf) {
     return correlations;
 }
 
-function notEnoughSignal(buf) {
+function isEnoughSignal(buf) {
     let signal = 0;
     for (let i = 0; i < buf.length; i++) {
         signal += buf[i] * buf[i];
     }
     signal = Math.sqrt(signal / buf.length);
 
-    return signal < MIN_SIGNAL;
+    return signal > MIN_SIGNAL;
 }
 
 function getSignalStart(buf, threshold) {
@@ -76,9 +76,10 @@ function getMax(buf) {
 
 // ACF2+ algorithm
 export function acf2(buf, sampleRate) {
-    if (notEnoughSignal(buf)) {
-        return -1;
-    }
     buf = buf.slice(getSignalStart(buf, THRESHOLD), getSignalEnd(buf, THRESHOLD));
-    return sampleRate / getMax(buf);
+    if(isEnoughSignal(buf))
+    {
+        return sampleRate / getMax(buf);
+    }
+    return -1;
 }

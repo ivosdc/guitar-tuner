@@ -1,6 +1,7 @@
 <script>
     import {onMount} from 'svelte';
     import {AMDF} from './pitch/amdf';
+    import {acf2} from './pitch/acf2'
     import {
         pitchToNote,
         detuneFromPitch,
@@ -101,7 +102,7 @@
         let AudioContext = window.AudioContext || window.webkitAudioContext || navigator.mozGetUserMedia;
         let aCtx = new AudioContext();
         const analyser = aCtx.createAnalyser();
-        analyser.fftSize = 2048;
+        analyser.fftSize = 4096;
         const microphone = aCtx.createMediaStreamSource(stream);
         microphone.connect(analyser);
         let fData = new Float32Array(analyser.frequencyBinCount);
@@ -117,8 +118,9 @@
             ratio: 10,
             sensitivity: 0.02,
         }
-        const pitchDetector = AMDF(amdf_config);
-        let pitch = pitchDetector(fData);
+        //const pitchDetector = AMDF(amdf_config);
+        //let pitch = pitchDetector(fData);
+        let pitch = acf2(fData, sampleRate);
         let note = pitchToNote(pitch);
         let detune = detuneFromPitch(pitch, note);
         analyser.getFloatTimeDomainData(fData);
