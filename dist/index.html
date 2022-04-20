@@ -20,6 +20,10 @@
         <span id="pitch-up" class="pitch-tune">></span>
     </div>
     <guitar-tuner id="guitar-tuner"></guitar-tuner>
+    <div>
+        <p id="min-signal" class="min-signal">Min.Signal:<input type="range" min="0.001" max="0.1" value="0.01" step="0.001" class="slider" id="min-signal-slider"><span id="min-signal-value"></span></p>
+        <p id="threshold" class="threshold">Threshold:<input type="range" min="0.00005" max="0.025" value="0.00025" step="0.00005" class="slider" id="threshold-slider"><span id="threshold-value"></span></p>
+    </div>
     <span id="mute" class="pitch-tune"> mic[on/off]</span>
     <p class="text">Guitar-Tuner / Chords-Overview</p>
     <guitar-chords></guitar-chords>
@@ -39,6 +43,28 @@
     pitchDown.onclick = setPitchDown;
     let mute = document.getElementById('mute');
     mute.onclick = toggleMute;
+    let minSignal = document.getElementById('min-signal-slider');
+    minSignal.onchange = setMinSignal;
+    let threshold = document.getElementById('threshold-slider');
+    threshold.onchange = setThreshold;
+    guitarTuner.setAttribute('threshold', 0.00025);
+    guitarTuner.setAttribute('min-signal', 0.001);
+    let minSignalValue = document.getElementById('min-signal-value');
+    let thresholdValue = document.getElementById('threshold-value');
+    minSignalValue.innerText = 0.001;
+    thresholdValue.innerText = 0.00025;
+
+    function setThreshold() {
+        let threshValue = document.getElementById('threshold-slider')
+        thresholdValue.innerText = threshValue.value;
+        guitarTuner.setAttribute('threshold', threshValue.value);
+    }
+    function setMinSignal() {
+        let minSigValue = document.getElementById('min-signal-slider')
+        minSignalValue.innerText = minSigValue.value;
+        guitarTuner.setAttribute('min_signal', minSigValue.value);
+    }
+
 
     let muted = false;
 

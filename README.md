@@ -22,6 +22,8 @@ or include into your website.
 - width; default: 180
 - height; default: 80
 - mute; default: false
+- min_signal; Signal strength of the microphone.
+- threshold; Threshold for pitch detection.
 - drawCanvas(ctx, pitch, note, detune)
 
 example / default:

@@ -1,7 +1,6 @@
 <script>
     import {onMount} from 'svelte';
-    import {AMDF} from './pitch/amdf';
-    import {acf2} from './pitch/acf2'
+    import {acf2, getMinSignal, getThreshold, setThreshold, setMinSignal} from './pitch/acf2'
     import {
         pitchToNote,
         detuneFromPitch,
@@ -17,6 +16,10 @@
     $: mute = setMicrophone(mute);
     export let chamber_pitch = getChamberPitch();
     $: chamber_pitch = setPitch(chamber_pitch);
+    export let threshold = getThreshold();
+    $: threshold = setThreshold(threshold);
+    export let min_signal = getMinSignal();
+    $: min_signal = setMinSignal(min_signal);
 
     function setMicrophone(mute) {
         mute = typeof mute === 'string' ? JSON.parse(mute) : mute;
@@ -111,15 +114,6 @@
 
     function update(analyser, sampleRate, fData) {
         const UPDATE_MS = 60;
-        const amdf_config = {
-            sampleRate: sampleRate,
-            minFrequency: 50,
-            maxFrequency: 1000,
-            ratio: 10,
-            sensitivity: 0.02,
-        }
-        //const pitchDetector = AMDF(amdf_config);
-        //let pitch = pitchDetector(fData);
         let pitch = acf2(fData, sampleRate);
         let note = pitchToNote(pitch);
         let detune = detuneFromPitch(pitch, note);

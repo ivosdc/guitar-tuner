@@ -1,5 +1,23 @@
-const MIN_SIGNAL = 0.01;
-const THRESHOLD = 0.00025;
+let MIN_SIGNAL = 0.01;
+let THRESHOLD = 0.00025;
+
+export function setMinSignal(signal) {
+    MIN_SIGNAL = signal;
+    return MIN_SIGNAL;
+}
+
+export function setThreshold(threshold) {
+    THRESHOLD = threshold;
+    return THRESHOLD;
+}
+
+export function getMinSignal() {
+    return MIN_SIGNAL;
+}
+
+export function getThreshold() {
+    return THRESHOLD;
+}
 
 
 function getMaxPos(correlated, SIZE) {

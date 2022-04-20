@@ -293,8 +293,28 @@ var GuitarTuner = (function () {
         };
     }
 
-    const MIN_SIGNAL = 0.01;
-    const THRESHOLD = 0.00025;
+    let MIN_SIGNAL = 0.01;
+    let THRESHOLD = 0.00025;
+
+    function setMinSignal(signal) {
+        console.log(signal);
+        MIN_SIGNAL = signal;
+        return MIN_SIGNAL;
+    }
+
+    function setThreshold(threshold) {
+        console.log(threshold);
+        THRESHOLD = threshold;
+        return THRESHOLD;
+    }
+
+    function getMinSignal() {
+        return MIN_SIGNAL;
+    }
+
+    function getThreshold() {
+        return THRESHOLD;
+    }
 
 
     function getMaxPos(correlated, SIZE) {
@@ -426,7 +446,7 @@ var GuitarTuner = (function () {
     		},
     		m(target, anchor) {
     			insert(target, canvas_1, anchor);
-    			/*canvas_1_binding*/ ctx[7](canvas_1);
+    			/*canvas_1_binding*/ ctx[9](canvas_1);
     		},
     		p(ctx, [dirty]) {
     			if (dirty & /*width*/ 1) {
@@ -441,7 +461,7 @@ var GuitarTuner = (function () {
     		o: noop,
     		d(detaching) {
     			if (detaching) detach(canvas_1);
-    			/*canvas_1_binding*/ ctx[7](null);
+    			/*canvas_1_binding*/ ctx[9](null);
     		}
     	};
     }
@@ -463,6 +483,8 @@ var GuitarTuner = (function () {
     	let { height = 50 } = $$props;
     	let { mute } = $$props;
     	let { chamber_pitch = getChamberPitch() } = $$props;
+    	let { threshold = getThreshold() } = $$props;
+    	let { min_signal = getMinSignal() } = $$props;
 
     	function setMicrophone(mute) {
     		mute = typeof mute === 'string' ? JSON.parse(mute) : mute;
@@ -566,11 +588,7 @@ var GuitarTuner = (function () {
 
     	function update(analyser, sampleRate, fData) {
     		const UPDATE_MS = 60;
-
-    		//const pitchDetector = AMDF(amdf_config);
-    		//let pitch = pitchDetector(fData);
     		let pitch = acf2(fData, sampleRate);
-
     		let note = pitchToNote(pitch);
     		let detune = detuneFromPitch(pitch, note);
     		analyser.getFloatTimeDomainData(fData);
@@ -609,6 +627,8 @@ var GuitarTuner = (function () {
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
     		if ('mute' in $$props) $$invalidate(3, mute = $$props.mute);
     		if ('chamber_pitch' in $$props) $$invalidate(4, chamber_pitch = $$props.chamber_pitch);
+    		if ('threshold' in $$props) $$invalidate(5, threshold = $$props.threshold);
+    		if ('min_signal' in $$props) $$invalidate(6, min_signal = $$props.min_signal);
     	};
 
     	$$self.$$.update = () => {
@@ -619,6 +639,14 @@ var GuitarTuner = (function () {
     		if ($$self.$$.dirty & /*chamber_pitch*/ 16) {
     			 $$invalidate(4, chamber_pitch = setPitch(chamber_pitch));
     		}
+
+    		if ($$self.$$.dirty & /*threshold*/ 32) {
+    			 $$invalidate(5, threshold = setThreshold(threshold));
+    		}
+
+    		if ($$self.$$.dirty & /*min_signal*/ 64) {
+    			 $$invalidate(6, min_signal = setMinSignal(min_signal));
+    		}
     	};
 
     	return [
@@ -627,6 +655,8 @@ var GuitarTuner = (function () {
     		canvas,
     		mute,
     		chamber_pitch,
+    		threshold,
+    		min_signal,
     		drawCanvas,
     		maintainCanvas,
     		canvas_1_binding
@@ -652,8 +682,10 @@ var GuitarTuner = (function () {
     				height: 1,
     				mute: 3,
     				chamber_pitch: 4,
-    				drawCanvas: 5,
-    				maintainCanvas: 6
+    				threshold: 5,
+    				min_signal: 6,
+    				drawCanvas: 7,
+    				maintainCanvas: 8
     			},
     			null
     		);
@@ -671,7 +703,16 @@ var GuitarTuner = (function () {
     	}
 
     	static get observedAttributes() {
-    		return ["width", "height", "mute", "chamber_pitch", "drawCanvas", "maintainCanvas"];
+    		return [
+    			"width",
+    			"height",
+    			"mute",
+    			"chamber_pitch",
+    			"threshold",
+    			"min_signal",
+    			"drawCanvas",
+    			"maintainCanvas"
+    		];
     	}
 
     	get width() {
@@ -710,12 +751,30 @@ var GuitarTuner = (function () {
     		flush();
     	}
 
-    	get drawCanvas() {
+    	get threshold() {
     		return this.$$.ctx[5];
     	}
 
-    	get maintainCanvas() {
+    	set threshold(threshold) {
+    		this.$$set({ threshold });
+    		flush();
+    	}
+
+    	get min_signal() {
     		return this.$$.ctx[6];
+    	}
+
+    	set min_signal(min_signal) {
+    		this.$$set({ min_signal });
+    		flush();
+    	}
+
+    	get drawCanvas() {
+    		return this.$$.ctx[7];
+    	}
+
+    	get maintainCanvas() {
+    		return this.$$.ctx[8];
     	}
     }
 
