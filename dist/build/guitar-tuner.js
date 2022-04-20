@@ -297,13 +297,11 @@ var GuitarTuner = (function () {
     let THRESHOLD = 0.00025;
 
     function setMinSignal(signal) {
-        console.log(signal);
         MIN_SIGNAL = signal;
         return MIN_SIGNAL;
     }
 
     function setThreshold(threshold) {
-        console.log(threshold);
         THRESHOLD = threshold;
         return THRESHOLD;
     }
