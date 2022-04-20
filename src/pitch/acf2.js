@@ -1,5 +1,5 @@
 let MIN_SIGNAL = 0.01;
-let THRESHOLD = 0.00025;
+let THRESHOLD = 0.00865;
 
 export function setMinSignal(signal) {
     MIN_SIGNAL = signal;
